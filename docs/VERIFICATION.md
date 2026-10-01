@@ -1,4 +1,27 @@
-# Verificação — 0.2.0, 2026-10-01
+# Verificação — 0.3.0, 2026-10-01
+
+64 testes locais passaram, sendo 14 novos para o transporte remoto. Cobrem
+OAuth discovery/DCR, formulário e cookie de proteção, PKCE, vínculo de
+callback/recurso/cliente, rejeição e não exposição de credenciais, códigos
+únicos e expirados, refresh rotativo, revogação, expiração absoluta, limpeza
+em restart, buscas por um cliente Streamable HTTP real do SDK e chamadas
+concorrentes de contas distintas. Conexões com as mesmas credenciais usam o
+mesmo serviço e controles. A validação Shopee foi exercitada com MockTransport,
+conferindo a assinatura com as credenciais fornecidas e o fechamento do cliente
+quando a API recusa acesso. Nenhuma credencial real foi usada nesses testes.
+
+A tela foi inspecionada no Chrome com um servidor local e dados fictícios.
+O endpoint HTTPS, ChatGPT, Hermes, Docker e VPS ainda exigem teste no destino.
+O Dockerfile agora inclui README/LICENSE antes da instalação para satisfazer
+os metadados do pacote. O daemon Docker local continua indisponível.
+
+O SDK MCP 1.21.1 ainda registra avisos `anyio.ClosedResourceError` ao encerrar
+transportes HTTP stateless; as respostas testadas passam. A integração remota
+continua experimental, com uma réplica/processo e credenciais em memória.
+Reiniciar o serviço apaga também o cadastro OAuth/DCR do cliente, podendo
+exigir remover e recriar a conexão. Não há persistência ou conta de usuário.
+
+## Verificação anterior — 0.2.0
 
 Ambiente local: macOS, Python 3.11.4. Dependências diretas e transitivas estão fixadas em `requirements.lock`. `pip check` passou.
 

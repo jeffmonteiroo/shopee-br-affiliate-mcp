@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 — 2026-10-01
+
+- Transporte `oauth-http` com cadastro dinâmico de clientes, PKCE S256, refresh rotativo e revogação.
+- Tela única de App ID/App Secret, validação de acesso e credenciais somente em memória.
+- Conexões isoladas e controles compartilhados quando usam as mesmas credenciais.
+- Sessão absoluta de 24 horas, limpeza de conexões expiradas e limites de memória/formulário.
+- Guia remoto, Compose, exemplo Hermes OAuth e correção do contexto de build Docker.
+- 14 testes adicionais, incluindo cliente MCP HTTP do SDK e API Shopee simulada. Integração real e implantação ainda pendentes.
+
 ## Preparação para publicação
 
 - Licença MIT, orientações de segurança e privacidade e metadados do pacote.

@@ -1,0 +1,111 @@
+# Conexão remota com uma única tela — 0.3.0
+
+O cliente abre uma tela de App ID e App Secret Shopee. Não há cadastro nem
+senha adicional. As credenciais são enviadas diretamente ao servidor HTTPS,
+validadas com uma pesquisa de produto e mantidas somente na memória. O cliente
+MCP recebe um token próprio, sem receber os segredos Shopee.
+
+## Na VPS
+
+Use uma origem dedicada, por exemplo `https://mcp.example.com`, sem caminho.
+Configure DNS e um proxy HTTPS com certificado válido antes de conectar.
+O proxy precisa preservar o header `Host` público e encaminhar todos os
+caminhos, incluindo `/mcp`, `/connect`, `/authorize`, `/register`, `/token`,
+`/revoke` e `/.well-known/*`. Não registre corpos de requisições nem headers
+de autorização no proxy; desabilite cache e mantenha limites de tráfego.
+Para health checks, use `/health` com o `Host` público configurado.
+
+Com Docker Compose, configure no ambiente ou em um `.env` local da VPS:
+
+```dotenv
+MCP_PUBLIC_URL=https://mcp.example.com
+MCP_OAUTH_REDIRECT_URIS=["http://localhost:27890/callback"]
+```
+
+Esse arquivo contém configuração pública; não recebe App ID ou Secret.
+
+```sh
+docker compose -f compose.remote.yaml up -d --build
+```
+
+O Compose publica a porta 8765 somente no loopback do host, para um proxy
+instalado no host. Se o proxy roda em container ou no Coolify, conecte os dois
+containers à rede privada apropriada e aponte o proxy para a porta 8765 do
+serviço. Não deixe essa porta HTTP exposta diretamente na internet.
+
+Sem Docker, instale o pacote e execute com as duas variáveis de configuração:
+
+```sh
+MCP_PUBLIC_URL=https://mcp.example.com \
+SHOPEE_VERIFIED_PROFILE=/opt/shopee-affiliate-mcp/examples/profile.official.json \
+.venv/bin/python run.py --transport oauth-http --port 8765
+```
+
+Este transporte sempre opera em live; não lê credenciais Shopee do ambiente.
+Ele escuta em `0.0.0.0` dentro do processo/container para o proxy alcançá-lo.
+Use firewall/rede privada para permitir acesso somente pelo proxy HTTPS.
+
+## No ChatGPT
+
+Habilite o modo de desenvolvedor, quando disponível na sua conta/workspace,
+e adicione uma conexão MCP com a URL `https://mcp.example.com/mcp`.
+Selecione autenticação OAuth e cadastro dinâmico de cliente (DCR), se a
+interface pedir essa escolha. Não configure uma chave Shopee como secret
+OAuth: o cadastro do cliente é separado das credenciais Shopee.
+
+Ao conectar, o navegador abre a tela de credenciais. Confira o domínio do
+servidor e o destino ChatGPT mostrado na tela. Preencha App ID e App Secret da
+Open API de Afiliados, confirme e volte ao ChatGPT. Nunca use a senha de login
+da Shopee nesse formulário. Se a API não aceitar a pesquisa, não há emissão
+de token; uma pesquisa aceita sem produtos também valida o acesso inicial.
+
+Comece pedindo `affiliate_status`, depois uma busca. Para gerar links, use a
+referência de conta retornada pelo status; ela é um identificador local opaco
+e não comprova titularidade por si só.
+
+Os callbacks HTTPS de `chatgpt.com/connector/oauth` são permitidos por padrão.
+Caso sua interface forneça outro callback, copie a URL exata para a lista
+`MCP_OAUTH_REDIRECT_URIS`, sem adicionar domínios arbitrários.
+
+Fontes: [autenticação OpenAI](https://developers.openai.com/plugins/build/auth)
+e [conexão e testes](https://developers.openai.com/plugins/deploy/connect-chatgpt).
+
+## No Hermes
+
+Use [hermes.remote.yaml](../examples/hermes.remote.yaml), alterando a URL.
+O servidor deve permitir exatamente `http://localhost:27890/callback` em
+`MCP_OAUTH_REDIRECT_URIS`. Hermes registra seu cliente OAuth e abre o mesmo
+formulário. Não precisa receber App ID/Secret na configuração.
+
+Se Hermes roda via SSH na VPS, abra o link no seu navegador e conclua pelo
+fluxo de colar o callback do Hermes, ou encaminhe a porta de callback por SSH.
+O callback deve coincidir com o registrado. O suporte depende da versão
+instalada do Hermes; atualize se ela não reconhecer `auth: oauth`.
+
+Fontes: [MCP no Hermes](https://github.com/nousresearch/hermes-agent/blob/main/website/docs/user-guide/features/mcp.md)
+e [OAuth por SSH](https://github.com/nousresearch/hermes-agent/blob/main/website/docs/guides/oauth-over-ssh.md).
+
+## Duração e limites
+
+- A tela de autorização expira em cinco minutos; códigos expiram em um minuto
+  e só podem ser usados uma vez, com PKCE S256 e callback registrado.
+- Tokens de acesso duram até uma hora; refresh rotativo não estende a duração
+  absoluta de 24 horas da conexão. Depois disso, conecte novamente.
+- Reiniciar o serviço apaga credenciais, tokens e registros de clientes OAuth.
+  Pode ser necessário excluir e adicionar novamente a conexão no ChatGPT
+  para forçar um novo DCR; no Hermes, refaça o registro/login do MCP.
+- Use somente um processo e uma réplica. Não configure múltiplos workers:
+  esta versão não compartilha memória entre processos.
+- Conexões com as mesmas credenciais compartilham o serviço Shopee e seus
+  controles de quota/relatórios. Contas diferentes têm serviços separados.
+  Instalações externas da mesma conta não participam dessa coordenação.
+- Histórico SQLite é desabilitado no transporte remoto. As ferramentas de
+  histórico continuam disponíveis em instalações stdio configuradas.
+- Limites por processo: 256 clientes/conexões pendentes/sessões; até dez
+  tentativas de conexão por minuto. Comece com poucos usuários e configure
+  limites por IP no proxy. Não é um serviço de escala nem gestão de usuários.
+- O runtime não grava credenciais em banco ou arquivos. Proteja a VPS e evite
+  core dumps/snapshots de memória; o sistema operacional pode usar swap.
+
+Esta versão foi verificada com API simulada e cliente HTTP MCP do SDK.
+ChatGPT, Hermes, API real, Docker e VPS ainda precisam de testes no destino.

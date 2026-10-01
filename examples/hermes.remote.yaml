@@ -1,0 +1,11 @@
+# Configure a URL publicada e habilite o callback exato no servidor.
+mcp_servers:
+  shopee-affiliate:
+    url: "https://mcp.example.com/mcp"
+    auth: oauth
+    oauth:
+      redirect_host: localhost
+      redirect_port: 27890
+    timeout: 40
+    connect_timeout: 15
+    supports_parallel_tool_calls: false

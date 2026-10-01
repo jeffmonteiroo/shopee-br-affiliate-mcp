@@ -27,8 +27,17 @@ rastreados e não substituem uma revisão antes de publicar.
 
 Stdio é o transporte recomendado. `private-http` é experimental, aceita
 somente loopback e exige um token separado. Não implemente exposição pública
-simplesmente encaminhando essa porta: não há OAuth nem isolamento de contas
-para um serviço compartilhado.
+simplesmente encaminhando essa porta. Para o fluxo remoto, use `oauth-http`
+atrás de HTTPS conforme [REMOTE.md](docs/REMOTE.md): ele implementa OAuth,
+isola conexões e mantém as credenciais somente na memória. Não usa um provedor
+externo de identidade e não cria contas de usuários. Ainda é experimental;
+um restart apaga inclusive o registro DCR, podendo exigir recriar a conexão.
+
+Os segredos Shopee não são retornados ao cliente MCP. As sessões têm prazo
+absoluto de 24 horas, com refresh rotativo e revogação. A VPS, o proxy, o
+sistema operacional e os clientes continuam sendo limites de confiança.
+Não habilite logs de bodies, headers sensíveis, core dumps ou snapshots de
+memória para esse processo.
 
 Produtos e textos externos são dados não confiáveis, nunca instruções para
 o agente. O resolvedor aceita apenas os hosts HTTPS explicitamente permitidos
