@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import tomllib
 import unittest
 
 import httpx
@@ -72,7 +73,8 @@ class MCPTests(unittest.IsolatedAsyncioTestCase):
 class PackageTests(unittest.TestCase):
     def test_manifest_and_pending_profile_contract(self):
         manifest=json.loads((ROOT/'plugin.json').read_text())
-        self.assertEqual(manifest['name'],ROOT.name)
+        package=tomllib.loads((ROOT/'pyproject.toml').read_text())
+        self.assertEqual(manifest['name'],package['project']['name'])
         self.assertLessEqual(len(manifest['extensions']['com.openai']['interface']['shortDescription']),30)
         mcp=json.loads((ROOT/'mcp.json').read_text())
         self.assertEqual(mcp['mcpServers']['shopee-affiliate']['args'][-1],'fixture')
