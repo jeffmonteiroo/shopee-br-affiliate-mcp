@@ -144,8 +144,13 @@ class MemoryOAuth:
 
     async def close(self):
         services = list(self.accounts.values())
-        self.clients.clear(); self.pending.clear(); self.codes.clear()
-        self.access.clear(); self.refresh.clear(); self.grants.clear(); self.accounts.clear()
+        self.clients.clear()
+        self.pending.clear()
+        self.codes.clear()
+        self.access.clear()
+        self.refresh.clear()
+        self.grants.clear()
+        self.accounts.clear()
         for service in services:
             if isinstance(service.provider, LiveProvider):
                 await service.provider.client.close()
