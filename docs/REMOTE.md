@@ -108,4 +108,6 @@ e [OAuth por SSH](https://github.com/nousresearch/hermes-agent/blob/main/website
   core dumps/snapshots de memória; o sistema operacional pode usar swap.
 
 Esta versão foi verificada com API simulada e cliente HTTP MCP do SDK.
-ChatGPT, Hermes, API real, Docker e VPS ainda precisam de testes no destino.
+A CI validou o build Docker e uma conexão MCP stdio em fixture dentro do
+container. ChatGPT, Hermes, API real, o fluxo HTTPS e a VPS ainda precisam de
+testes no destino.

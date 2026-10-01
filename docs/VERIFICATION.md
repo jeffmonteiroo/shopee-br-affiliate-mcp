@@ -11,7 +11,9 @@ conferindo a assinatura com as credenciais fornecidas e o fechamento do cliente
 quando a API recusa acesso. Nenhuma credencial real foi usada nesses testes.
 
 A tela foi inspecionada no Chrome com um servidor local e dados fictícios.
-O endpoint HTTPS, ChatGPT, Hermes, Docker e VPS ainda exigem teste no destino.
+A CI passou em Linux/Python 3.11 e 3.12 e validou o build Docker, além de
+initialize/list/status MCP dentro do container em fixture. O endpoint HTTPS,
+ChatGPT, Hermes, o fluxo live no container e a VPS ainda exigem teste no destino.
 O Dockerfile agora inclui README/LICENSE antes da instalação para satisfazer
 os metadados do pacote. O daemon Docker local continua indisponível.
 

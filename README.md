@@ -110,7 +110,7 @@ Configure `SHOPEE_HISTORY_DB` para habilitar as ferramentas de histórico. Somen
 
 ## VPS
 
-Veja [instalação na VPS](docs/VPS.md). Para Hermes na mesma VPS, stdio dispensa porta pública. O Dockerfile roda como usuário sem privilégios e inicia em fixture por padrão. O build Docker ainda precisa ser validado no destino.
+Veja [instalação na VPS](docs/VPS.md). Para Hermes na mesma VPS, stdio dispensa porta pública. O Dockerfile roda como usuário sem privilégios e inicia em fixture por padrão. A CI valida o build Docker e initialize/list/status MCP dentro do container em fixture. A configuração HTTPS e o fluxo live ainda precisam de teste no destino.
 
 O transporte `private-http` permanece experimental, restrito ao loopback e protegido por um token separado. Para conexão remota, use `oauth-http` atrás de HTTPS conforme o [guia](docs/REMOTE.md).
 
