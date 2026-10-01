@@ -1,0 +1,2904 @@
+{
+  "affiliate_status": {
+    "description": "Mostra modo e referência LOCAL da conta. Não autentica nem comprova titularidade na Shopee.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {},
+      "required": [],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "api_authenticated_in_this_call": {
+              "const": false
+            },
+            "account_binding": {
+              "const": "local_configuration_not_api_identity"
+            },
+            "official_schema_verified": {
+              "type": "boolean"
+            },
+            "live_acceptance_required": {
+              "const": true
+            },
+            "tools_available": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "history_enabled": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "api_authenticated_in_this_call",
+            "account_binding",
+            "official_schema_verified",
+            "live_acceptance_required",
+            "tools_available",
+            "history_enabled"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "search_offers": {
+    "description": "Pesquisa uma página; preço/comissão são observações estimadas. Modo fixture contém somente dados sintéticos.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "keyword": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "sort_type": {
+          "type": "integer",
+          "enum": [
+            1,
+            2,
+            3,
+            4,
+            5
+          ],
+          "description": "1 relevância (com keyword), 2 vendas, 3 preço desc, 4 preço asc, 5 comissão desc"
+        },
+        "shop_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "category_id": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2147483647
+        },
+        "is_ams_offer": {
+          "type": "boolean"
+        },
+        "is_key_seller": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "keyword"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "offers": {
+              "type": "array",
+              "maxItems": 50,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "item_id": {
+                    "type": "string",
+                    "pattern": "^[0-9]{1,20}$"
+                  },
+                  "shop_id": {
+                    "type": "string",
+                    "pattern": "^[0-9]{1,20}$"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "shop_name": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "product_url": {
+                    "type": "string"
+                  },
+                  "price_min_brl": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "price_max_brl": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_rate_raw": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_rate_fraction": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_estimated_brl": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_status": {
+                    "const": "estimated"
+                  },
+                  "sales": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "rating": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "period_start_raw": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "period_end_raw": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "observed_at": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "enum": [
+                      "synthetic_fixture",
+                      "shopee_affiliate_open_api"
+                    ]
+                  },
+                  "currency_evidence": {
+                    "enum": [
+                      "market_region_inference",
+                      "synthetic"
+                    ]
+                  },
+                  "image_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "category_ids": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "discount_percent": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "shop_types": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "seller_commission_rate": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "shopee_commission_rate": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "item_id",
+                  "shop_id",
+                  "name",
+                  "shop_name",
+                  "product_url",
+                  "price_min_brl",
+                  "price_max_brl",
+                  "commission_rate_raw",
+                  "commission_rate_fraction",
+                  "commission_estimated_brl",
+                  "commission_status",
+                  "sales",
+                  "rating",
+                  "period_start_raw",
+                  "period_end_raw",
+                  "observed_at",
+                  "source",
+                  "currency_evidence"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "pagination": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "integer"
+                },
+                "limit": {
+                  "type": "integer"
+                },
+                "has_next_page": {
+                  "type": "boolean"
+                },
+                "next_page": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                },
+                "next_cursor": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "page",
+                "limit",
+                "has_next_page",
+                "next_page",
+                "next_cursor"
+              ],
+              "additionalProperties": false
+            },
+            "observed_at": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "offers",
+            "pagination",
+            "observed_at"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "get_offer": {
+    "description": "Reconsulta oferta por item_id e shop_id. Retorna nova observação; não garante estoque, frete ou comissão aprovada.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        },
+        "shop_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,20}$"
+        }
+      },
+      "required": [
+        "item_id",
+        "shop_id"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "offer": {
+              "type": "object",
+              "properties": {
+                "item_id": {
+                  "type": "string",
+                  "pattern": "^[0-9]{1,20}$"
+                },
+                "shop_id": {
+                  "type": "string",
+                  "pattern": "^[0-9]{1,20}$"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "shop_name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "product_url": {
+                  "type": "string"
+                },
+                "price_min_brl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "price_max_brl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "commission_rate_raw": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "commission_rate_fraction": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "commission_estimated_brl": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "commission_status": {
+                  "const": "estimated"
+                },
+                "sales": {
+                  "type": [
+                    "number",
+                    "integer",
+                    "string",
+                    "null"
+                  ]
+                },
+                "rating": {
+                  "type": [
+                    "number",
+                    "integer",
+                    "string",
+                    "null"
+                  ]
+                },
+                "period_start_raw": {
+                  "type": [
+                    "number",
+                    "integer",
+                    "string",
+                    "null"
+                  ]
+                },
+                "period_end_raw": {
+                  "type": [
+                    "number",
+                    "integer",
+                    "string",
+                    "null"
+                  ]
+                },
+                "observed_at": {
+                  "type": "string"
+                },
+                "source": {
+                  "enum": [
+                    "synthetic_fixture",
+                    "shopee_affiliate_open_api"
+                  ]
+                },
+                "currency_evidence": {
+                  "enum": [
+                    "market_region_inference",
+                    "synthetic"
+                  ]
+                },
+                "image_url": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "category_ids": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "discount_percent": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ],
+                  "minimum": 0,
+                  "maximum": 100
+                },
+                "shop_types": {
+                  "type": [
+                    "array",
+                    "null"
+                  ],
+                  "items": {
+                    "type": "integer"
+                  }
+                },
+                "seller_commission_rate": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "shopee_commission_rate": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "item_id",
+                "shop_id",
+                "name",
+                "shop_name",
+                "product_url",
+                "price_min_brl",
+                "price_max_brl",
+                "commission_rate_raw",
+                "commission_rate_fraction",
+                "commission_estimated_brl",
+                "commission_status",
+                "sales",
+                "rating",
+                "period_start_raw",
+                "period_end_raw",
+                "observed_at",
+                "source",
+                "currency_evidence"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "offer"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "generate_affiliate_link": {
+    "description": "Gera link SOMENTE via operação oficial verificada, para a referência de conta esperada e subIDs explícitos. Nunca publica. Fixtures recusam geração.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "origin_url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        },
+        "sub_ids": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 64,
+            "pattern": "^[A-Za-z0-9_-]+$"
+          }
+        },
+        "expected_account_reference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      },
+      "required": [
+        "origin_url",
+        "sub_ids",
+        "expected_account_reference"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "affiliate_url": {
+              "type": "string"
+            },
+            "origin_url": {
+              "type": "string"
+            },
+            "sub_ids": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 5,
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "^[A-Za-z0-9_-]+$"
+              }
+            },
+            "generated_at": {
+              "type": "string"
+            },
+            "source": {
+              "const": "shopee_affiliate_open_api"
+            },
+            "attribution_evidence": {
+              "const": "credential_context_only"
+            },
+            "commission_status": {
+              "const": "estimated"
+            }
+          },
+          "required": [
+            "affiliate_url",
+            "origin_url",
+            "sub_ids",
+            "generated_at",
+            "source",
+            "attribution_evidence",
+            "commission_status"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "search_shop_offers": {
+    "description": "Pesquisa ofertas de lojas, comissão, classificação e orçamento disponível.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "keyword": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "sort_type": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "shop_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "shop_types": {
+          "type": "array",
+          "maxItems": 3,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              1,
+              2,
+              4
+            ]
+          }
+        },
+        "is_key_seller": {
+          "type": "boolean"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "offers": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              },
+              "maxItems": 50
+            },
+            "pagination": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "integer"
+                },
+                "limit": {
+                  "type": "integer"
+                },
+                "has_next_page": {
+                  "type": "boolean"
+                },
+                "next_page": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "page",
+                "limit",
+                "has_next_page",
+                "next_page"
+              ],
+              "additionalProperties": false
+            },
+            "observed_at": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "offers",
+            "pagination",
+            "observed_at"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "search_campaign_offers": {
+    "description": "Pesquisa campanhas e ofertas Shopee com categoria/coleção e período.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "keyword": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "page": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1000
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 50
+        },
+        "sort_type": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 2
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "offers": {
+              "type": "array",
+              "items": {
+                "type": "object"
+              },
+              "maxItems": 50
+            },
+            "pagination": {
+              "type": "object",
+              "properties": {
+                "page": {
+                  "type": "integer"
+                },
+                "limit": {
+                  "type": "integer"
+                },
+                "has_next_page": {
+                  "type": "boolean"
+                },
+                "next_page": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "page",
+                "limit",
+                "has_next_page",
+                "next_page"
+              ],
+              "additionalProperties": false
+            },
+            "observed_at": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "offers",
+            "pagination",
+            "observed_at"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "list_product_feeds": {
+    "description": "Lista catálogos oficiais FULL ou DELTA disponíveis para a conta.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "feed_mode": {
+          "enum": [
+            "FULL",
+            "DELTA"
+          ]
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "feeds": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "datafeed_id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "reference_id": {
+                    "type": "string"
+                  },
+                  "description": {
+                    "type": "string"
+                  },
+                  "total_count": {
+                    "type": "string"
+                  },
+                  "date": {
+                    "type": "string"
+                  },
+                  "feed_mode": {
+                    "enum": [
+                      "FULL",
+                      "DELTA"
+                    ]
+                  }
+                },
+                "required": [
+                  "datafeed_id",
+                  "name",
+                  "reference_id",
+                  "description",
+                  "total_count",
+                  "date",
+                  "feed_mode"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "feeds"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "get_product_feed": {
+    "description": "Obtém uma página do feed oficial; preserva IDs e decimais como strings.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "datafeed_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "offset": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      },
+      "required": [
+        "datafeed_id"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "rows": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "columns": {
+                    "type": "object"
+                  },
+                  "update_type": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "columns",
+                  "update_type"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 500
+            },
+            "pagination": {
+              "type": "object",
+              "properties": {
+                "offset": {
+                  "type": "integer"
+                },
+                "limit": {
+                  "type": "integer"
+                },
+                "total_count": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "has_more": {
+                  "type": "boolean"
+                },
+                "next_offset": {
+                  "type": [
+                    "integer",
+                    "null"
+                  ]
+                }
+              },
+              "required": [
+                "offset",
+                "limit",
+                "total_count",
+                "has_more",
+                "next_offset"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "rows",
+            "pagination"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "get_conversion_report": {
+    "description": "Consulta conversões e comissões ainda não validadas; paginação automática limitada e cursor de uso único/30s.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "purchase_time_start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "purchase_time_end": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "shop_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "product_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "order_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "order_status": {
+          "enum": [
+            "ALL",
+            "UNPAID",
+            "PENDING",
+            "COMPLETED",
+            "CANCELLED"
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "max_pages": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "purchase_time_start",
+        "purchase_time_end"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "records": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "conversion_id": {
+                    "type": "string"
+                  },
+                  "purchase_time": {
+                    "type": "integer"
+                  },
+                  "click_time": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "shopee_commission_capped": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "seller_commission": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "total_commission": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "net_commission": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "mcn_management_fee": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "utm_content": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "campaign_type": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "device": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "orders": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "order_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "order_status": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "shop_id": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "shop_name": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "item_id": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "item_name": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "actual_amount": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "quantity": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "total_commission": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "seller_commission": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "shopee_commission_capped": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "status": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "fraud_status": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "campaign_type": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "shop_id",
+                              "shop_name",
+                              "item_id",
+                              "item_name",
+                              "actual_amount",
+                              "quantity",
+                              "total_commission",
+                              "seller_commission",
+                              "shopee_commission_capped",
+                              "status",
+                              "fraud_status",
+                              "campaign_type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "order_id",
+                        "order_status",
+                        "items"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "commission_status": {
+                    "enum": [
+                      "validated",
+                      "reported_unvalidated"
+                    ]
+                  }
+                },
+                "required": [
+                  "conversion_id",
+                  "purchase_time",
+                  "click_time",
+                  "shopee_commission_capped",
+                  "seller_commission",
+                  "total_commission",
+                  "net_commission",
+                  "mcn_management_fee",
+                  "utm_content",
+                  "campaign_type",
+                  "device",
+                  "orders",
+                  "commission_status"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 5000
+            },
+            "report_type": {
+              "const": "conversion"
+            },
+            "commission_status": {
+              "enum": [
+                "validated",
+                "reported_unvalidated",
+                "synthetic"
+              ]
+            },
+            "pagination": {
+              "type": "object",
+              "properties": {
+                "pages_fetched": {
+                  "type": "integer"
+                },
+                "has_next_page": {
+                  "type": "boolean"
+                },
+                "next_cursor": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "cursor_ttl_seconds": {
+                  "const": 30
+                }
+              },
+              "required": [
+                "pages_fetched",
+                "has_next_page",
+                "next_cursor",
+                "cursor_ttl_seconds"
+              ],
+              "additionalProperties": false
+            },
+            "complete": {
+              "type": "boolean"
+            },
+            "observed_at": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "records",
+            "report_type",
+            "commission_status",
+            "pagination",
+            "complete",
+            "observed_at"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "get_validated_report": {
+    "description": "Consulta comissões validadas por validationId do painel de faturamento; não comprova pagamento.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "validation_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "max_pages": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      },
+      "required": [
+        "validation_id"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "records": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "conversion_id": {
+                    "type": "string"
+                  },
+                  "purchase_time": {
+                    "type": "integer"
+                  },
+                  "click_time": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ]
+                  },
+                  "shopee_commission_capped": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "seller_commission": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "total_commission": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "net_commission": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "mcn_management_fee": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "utm_content": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "campaign_type": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "device": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "orders": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "order_id": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "order_status": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "shop_id": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "shop_name": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "item_id": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "item_name": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "actual_amount": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "quantity": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "total_commission": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "seller_commission": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "shopee_commission_capped": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "status": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "fraud_status": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "campaign_type": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              }
+                            },
+                            "required": [
+                              "shop_id",
+                              "shop_name",
+                              "item_id",
+                              "item_name",
+                              "actual_amount",
+                              "quantity",
+                              "total_commission",
+                              "seller_commission",
+                              "shopee_commission_capped",
+                              "status",
+                              "fraud_status",
+                              "campaign_type"
+                            ],
+                            "additionalProperties": false
+                          }
+                        }
+                      },
+                      "required": [
+                        "order_id",
+                        "order_status",
+                        "items"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  "commission_status": {
+                    "enum": [
+                      "validated",
+                      "reported_unvalidated"
+                    ]
+                  }
+                },
+                "required": [
+                  "conversion_id",
+                  "purchase_time",
+                  "click_time",
+                  "shopee_commission_capped",
+                  "seller_commission",
+                  "total_commission",
+                  "net_commission",
+                  "mcn_management_fee",
+                  "utm_content",
+                  "campaign_type",
+                  "device",
+                  "orders",
+                  "commission_status"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 5000
+            },
+            "report_type": {
+              "const": "validated"
+            },
+            "commission_status": {
+              "enum": [
+                "validated",
+                "reported_unvalidated",
+                "synthetic"
+              ]
+            },
+            "pagination": {
+              "type": "object",
+              "properties": {
+                "pages_fetched": {
+                  "type": "integer"
+                },
+                "has_next_page": {
+                  "type": "boolean"
+                },
+                "next_cursor": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "cursor_ttl_seconds": {
+                  "const": 30
+                }
+              },
+              "required": [
+                "pages_fetched",
+                "has_next_page",
+                "next_cursor",
+                "cursor_ttl_seconds"
+              ],
+              "additionalProperties": false
+            },
+            "complete": {
+              "type": "boolean"
+            },
+            "observed_at": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "records",
+            "report_type",
+            "commission_status",
+            "pagination",
+            "complete",
+            "observed_at"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "summarize_report": {
+    "description": "Agrupa conversões por subID bruto, campanha ou dia UTC; informa quando o total cobre apenas parte do relatório.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "purchase_time_start": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "purchase_time_end": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 2147483647
+        },
+        "shop_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "product_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "order_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "order_status": {
+          "enum": [
+            "ALL",
+            "UNPAID",
+            "PENDING",
+            "COMPLETED",
+            "CANCELLED"
+          ]
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "cursor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "max_pages": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "group_by": {
+          "enum": [
+            "utm_content",
+            "campaign_type",
+            "day",
+            "item_id",
+            "shop_id"
+          ]
+        }
+      },
+      "required": [
+        "purchase_time_start",
+        "purchase_time_end"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "groups": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "group": {
+                    "type": "string"
+                  },
+                  "conversions": {
+                    "type": "integer"
+                  },
+                  "known_total_commission": {
+                    "type": "string"
+                  },
+                  "known_net_commission": {
+                    "type": "string"
+                  },
+                  "missing_total_commission": {
+                    "type": "integer"
+                  },
+                  "missing_net_commission": {
+                    "type": "integer"
+                  }
+                },
+                "required": [
+                  "group",
+                  "conversions",
+                  "known_total_commission",
+                  "known_net_commission",
+                  "missing_total_commission",
+                  "missing_net_commission"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "group_by": {
+              "enum": [
+                "utm_content",
+                "campaign_type",
+                "day",
+                "shop_id",
+                "item_id"
+              ]
+            },
+            "day_timezone": {
+              "enum": [
+                "UTC",
+                null
+              ]
+            },
+            "aggregation_scope": {
+              "enum": [
+                "items",
+                "conversions"
+              ]
+            },
+            "conversions": {
+              "type": "integer"
+            },
+            "complete": {
+              "type": "boolean"
+            },
+            "pagination": {
+              "type": "object",
+              "properties": {
+                "pages_fetched": {
+                  "type": "integer"
+                },
+                "has_next_page": {
+                  "type": "boolean"
+                },
+                "next_cursor": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "cursor_ttl_seconds": {
+                  "const": 30
+                }
+              },
+              "required": [
+                "pages_fetched",
+                "has_next_page",
+                "next_cursor",
+                "cursor_ttl_seconds"
+              ],
+              "additionalProperties": false
+            },
+            "commission_status": {
+              "enum": [
+                "validated",
+                "reported_unvalidated",
+                "synthetic"
+              ]
+            },
+            "click_metric": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "groups",
+            "group_by",
+            "day_timezone",
+            "aggregation_scope",
+            "conversions",
+            "complete",
+            "pagination",
+            "commission_status",
+            "click_metric"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "parse_product_url": {
+    "description": "Extrai IDs de URL Shopee.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "item_id": {
+              "type": "string"
+            },
+            "shop_id": {
+              "type": "string"
+            },
+            "product_url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "item_id",
+            "shop_id",
+            "product_url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "resolve_product_url": {
+    "description": "Resolve link curto Shopee, validando cada redirecionamento antes de consultar IDs.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2048
+        }
+      },
+      "required": [
+        "url"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "item_id": {
+              "type": "string"
+            },
+            "shop_id": {
+              "type": "string"
+            },
+            "product_url": {
+              "type": "string"
+            },
+            "origin_url": {
+              "type": "string"
+            },
+            "resolved_url": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "item_id",
+            "shop_id",
+            "product_url",
+            "origin_url",
+            "resolved_url"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "generate_affiliate_links_batch": {
+    "description": "Gera até 20 links oficiais sequencialmente; valida todo o lote antes do envio e interrompe em erro.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "links": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 20,
+          "items": {
+            "type": "object",
+            "properties": {
+              "origin_url": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 2048
+              },
+              "sub_ids": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 5,
+                "items": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 64,
+                  "pattern": "^[A-Za-z0-9_-]+$"
+                }
+              }
+            },
+            "required": [
+              "origin_url",
+              "sub_ids"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "expected_account_reference": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_-]+$"
+        }
+      },
+      "required": [
+        "links",
+        "expected_account_reference"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "results": {
+              "type": "array",
+              "items": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "index": {
+                        "type": "integer"
+                      },
+                      "status": {
+                        "const": "ok"
+                      },
+                      "data": {
+                        "type": "object",
+                        "properties": {
+                          "affiliate_url": {
+                            "type": "string"
+                          },
+                          "origin_url": {
+                            "type": "string"
+                          },
+                          "sub_ids": {
+                            "type": "array",
+                            "minItems": 1,
+                            "maxItems": 5,
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 64,
+                              "pattern": "^[A-Za-z0-9_-]+$"
+                            }
+                          },
+                          "generated_at": {
+                            "type": "string"
+                          },
+                          "source": {
+                            "const": "shopee_affiliate_open_api"
+                          },
+                          "attribution_evidence": {
+                            "const": "credential_context_only"
+                          },
+                          "commission_status": {
+                            "const": "estimated"
+                          }
+                        },
+                        "required": [
+                          "affiliate_url",
+                          "origin_url",
+                          "sub_ids",
+                          "generated_at",
+                          "source",
+                          "attribution_evidence",
+                          "commission_status"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "index",
+                      "status",
+                      "data"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "index": {
+                        "type": "integer"
+                      },
+                      "status": {
+                        "const": "error"
+                      },
+                      "error": {
+                        "type": "object",
+                        "properties": {
+                          "code": {
+                            "type": "string"
+                          },
+                          "message": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "code",
+                          "message"
+                        ],
+                        "additionalProperties": false
+                      }
+                    },
+                    "required": [
+                      "index",
+                      "status",
+                      "error"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "index": {
+                        "type": "integer"
+                      },
+                      "status": {
+                        "const": "not_attempted"
+                      }
+                    },
+                    "required": [
+                      "index",
+                      "status"
+                    ],
+                    "additionalProperties": false
+                  }
+                ]
+              },
+              "maxItems": 20
+            },
+            "stopped_on_error": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "results",
+            "stopped_on_error"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "export_data": {
+    "description": "Retorna CSV ou JSON dos registros fornecidos, sem escrever arquivos; neutraliza fórmulas em CSV.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "enum": [
+            "csv",
+            "json"
+          ]
+        },
+        "rows": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "maxProperties": 100
+          }
+        }
+      },
+      "required": [
+        "format",
+        "rows"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "format": {
+              "enum": [
+                "csv",
+                "json"
+              ]
+            },
+            "mime_type": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            },
+            "row_count": {
+              "type": "integer"
+            },
+            "source": {
+              "const": "caller_supplied_data"
+            }
+          },
+          "required": [
+            "format",
+            "mime_type",
+            "content",
+            "row_count",
+            "source"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "observe_offer": {
+    "description": "Registra uma nova observação do produto em SQLite local habilitado pelo administrador.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "shop_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        }
+      },
+      "required": [
+        "item_id",
+        "shop_id"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "observations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "item_id": {
+                    "type": "string",
+                    "pattern": "^[0-9]{1,20}$"
+                  },
+                  "shop_id": {
+                    "type": "string",
+                    "pattern": "^[0-9]{1,20}$"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "shop_name": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "product_url": {
+                    "type": "string"
+                  },
+                  "price_min_brl": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "price_max_brl": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_rate_raw": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_rate_fraction": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_estimated_brl": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_status": {
+                    "const": "estimated"
+                  },
+                  "sales": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "rating": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "period_start_raw": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "period_end_raw": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "observed_at": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "enum": [
+                      "synthetic_fixture",
+                      "shopee_affiliate_open_api"
+                    ]
+                  },
+                  "currency_evidence": {
+                    "enum": [
+                      "market_region_inference",
+                      "synthetic"
+                    ]
+                  },
+                  "image_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "category_ids": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "discount_percent": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "shop_types": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "seller_commission_rate": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "shopee_commission_rate": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "item_id",
+                  "shop_id",
+                  "name",
+                  "shop_name",
+                  "product_url",
+                  "price_min_brl",
+                  "price_max_brl",
+                  "commission_rate_raw",
+                  "commission_rate_fraction",
+                  "commission_estimated_brl",
+                  "commission_status",
+                  "sales",
+                  "rating",
+                  "period_start_raw",
+                  "period_end_raw",
+                  "observed_at",
+                  "source",
+                  "currency_evidence"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 100
+            },
+            "history_scope": {
+              "const": "observations_collected_by_this_server"
+            }
+          },
+          "required": [
+            "observations",
+            "history_scope"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "get_offer_history": {
+    "description": "Consulta observações coletadas neste servidor, separadas por conta e modo.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "item_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "shop_id": {
+          "type": "string",
+          "pattern": "^[0-9]{1,19}$"
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      },
+      "required": [
+        "item_id",
+        "shop_id"
+      ],
+      "additionalProperties": false
+    },
+    "outputSchema": {
+      "type": "object",
+      "properties": {
+        "mode": {
+          "enum": [
+            "fixture",
+            "live"
+          ]
+        },
+        "synthetic": {
+          "type": "boolean"
+        },
+        "account_reference": {
+          "type": "string"
+        },
+        "data": {
+          "type": "object",
+          "properties": {
+            "observations": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "item_id": {
+                    "type": "string",
+                    "pattern": "^[0-9]{1,20}$"
+                  },
+                  "shop_id": {
+                    "type": "string",
+                    "pattern": "^[0-9]{1,20}$"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "shop_name": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "product_url": {
+                    "type": "string"
+                  },
+                  "price_min_brl": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "price_max_brl": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_rate_raw": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_rate_fraction": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_estimated_brl": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "commission_status": {
+                    "const": "estimated"
+                  },
+                  "sales": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "rating": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "period_start_raw": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "period_end_raw": {
+                    "type": [
+                      "number",
+                      "integer",
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "observed_at": {
+                    "type": "string"
+                  },
+                  "source": {
+                    "enum": [
+                      "synthetic_fixture",
+                      "shopee_affiliate_open_api"
+                    ]
+                  },
+                  "currency_evidence": {
+                    "enum": [
+                      "market_region_inference",
+                      "synthetic"
+                    ]
+                  },
+                  "image_url": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "category_ids": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "discount_percent": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 0,
+                    "maximum": 100
+                  },
+                  "shop_types": {
+                    "type": [
+                      "array",
+                      "null"
+                    ],
+                    "items": {
+                      "type": "integer"
+                    }
+                  },
+                  "seller_commission_rate": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "shopee_commission_rate": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "item_id",
+                  "shop_id",
+                  "name",
+                  "shop_name",
+                  "product_url",
+                  "price_min_brl",
+                  "price_max_brl",
+                  "commission_rate_raw",
+                  "commission_rate_fraction",
+                  "commission_estimated_brl",
+                  "commission_status",
+                  "sales",
+                  "rating",
+                  "period_start_raw",
+                  "period_end_raw",
+                  "observed_at",
+                  "source",
+                  "currency_evidence"
+                ],
+                "additionalProperties": false
+              },
+              "maxItems": 100
+            },
+            "history_scope": {
+              "const": "observations_collected_by_this_server"
+            }
+          },
+          "required": [
+            "observations",
+            "history_scope"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "mode",
+        "synthetic",
+        "account_reference",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

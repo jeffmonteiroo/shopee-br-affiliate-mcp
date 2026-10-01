@@ -1,0 +1,21 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "shopee-affiliate-mcp",
+  "version": "0.2.0",
+  "description": "MCP de afiliados Shopee Brasil: ofertas, feeds, links, relatórios e histórico local.",
+  "author": {
+    "name": "Shopee Affiliate MCP contributors"
+  },
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Shopee Afiliado",
+        "shortDescription": "Ofertas e links da sua conta",
+        "longDescription": "Ofertas enriquecidas, campanhas, feeds de catálogo, links em lote, conversões, comissões validadas, exportação e histórico opcional. Credenciais reais configuradas no ambiente.",
+        "developerName": "Shopee Affiliate MCP contributors",
+        "category": "Productivity",
+        "defaultPrompt": "Pesquise ofertas na minha conta Shopee e gere links com os subIDs informados."
+      }
+    }
+  }
+}

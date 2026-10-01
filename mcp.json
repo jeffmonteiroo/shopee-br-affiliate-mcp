@@ -1,0 +1,15 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "shopee-affiliate": {
+      "type": "stdio",
+      "command": "${PLUGIN_ROOT}/.venv/bin/python",
+      "args": [
+        "${PLUGIN_ROOT}/run.py",
+        "--mode",
+        "fixture"
+      ],
+      "cwd": "${PLUGIN_ROOT}"
+    }
+  }
+}

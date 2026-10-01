@@ -1,0 +1,22 @@
+{
+  "profile_version": 1,
+  "official_docs_verified": false,
+  "verification": {
+    "source_url": "https://open-api.affiliate.shopee.com.br/explorer",
+    "checked_at": "2026-10-01",
+    "notes": "Perfil de exemplo deliberadamente não verificado e sem operações. Para o contrato documentado em 2026-10-01, revisar profile.official.json. Nenhum dos perfis comprova autenticação ou execução real."
+  },
+  "endpoint": "https://open-api.affiliate.shopee.com.br/graphql",
+  "auth_algorithm": "sha256_app_timestamp_body_secret",
+  "commission_rate_unit": "unknown",
+  "affiliate_link_hosts": [
+    "replace-with-documented-host.invalid"
+  ],
+  "sub_ids": {
+    "max_count": 5,
+    "max_length": 64,
+    "pattern": "[A-Za-z0-9_-]+",
+    "official_count_verified": false
+  },
+  "operations": {}
+}

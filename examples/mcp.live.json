@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "shopee-affiliate": {
+      "command": "/opt/shopee-affiliate-mcp/.venv/bin/python",
+      "args": ["/opt/shopee-affiliate-mcp/run.py", "--mode", "live"],
+      "cwd": "/opt/shopee-affiliate-mcp",
+      "env": {
+        "SHOPEE_VERIFIED_PROFILE": "/opt/shopee-affiliate-mcp/examples/profile.official.json",
+        "SHOPEE_ACCOUNT_REFERENCE": "minha-conta"
+      }
+    }
+  }
+}

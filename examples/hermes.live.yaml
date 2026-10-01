@@ -1,0 +1,10 @@
+# Configure caminhos da VPS e confirme a aplicação/conta no portal.
+# Segredos entram pelo ambiente do processo/secret manager; nunca aqui.
+mcp_servers:
+  shopee-affiliate:
+    command: "/CAMINHO/DO/PROJETO/.venv/bin/python"
+    args: ["/CAMINHO/DO/PROJETO/run.py", "--mode", "live"]
+    cwd: "/CAMINHO/DO/PROJETO"
+    timeout: 40
+    connect_timeout: 15
+    supports_parallel_tool_calls: false

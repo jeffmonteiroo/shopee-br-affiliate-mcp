@@ -1,0 +1,302 @@
+{
+  "profile_version": 1,
+  "official_docs_verified": true,
+  "verification": {
+    "source_url": "https://affiliate.shopee.com.br/open_api/list?type=product_offer",
+    "checked_at": "2026-10-01",
+    "notes": "Contratos conferidos no portal BR autenticado em 2026-10-01: produto v2, loja v2, campanhas v2, feeds FULL/DELTA, conversionReport e validatedReport. Tipos literais preservados; limite de relatórios 500 e cursor de uso único/30s documentados. Janela 90 dias é política local. BRL inferido do mercado. Nenhuma nova operação foi executada com credenciais reais pelo agente."
+  },
+  "endpoint": "https://open-api.affiliate.shopee.com.br/graphql",
+  "auth_algorithm": "sha256_app_timestamp_body_secret",
+  "commission_rate_unit": "fraction",
+  "affiliate_link_hosts": [
+    "shope.ee"
+  ],
+  "sub_ids": {
+    "official_count_verified": true,
+    "max_count": 5,
+    "max_length": 64,
+    "pattern": "[A-Za-z0-9_-]+"
+  },
+  "operations": {
+    "search": {
+      "operation_name": "SearchOffers",
+      "query": "query SearchOffers { productOfferV2(keyword:{{keyword}},page:{{page}},limit:{{limit}},sortType:{{sort_type}},shopId:{{shop_id}},productCatId:{{category_id}},isAMSOffer:{{is_ams_offer}},isKeySeller:{{is_key_seller}}) { nodes { itemId shopId productName shopName productLink priceMin priceMax commissionRate commission sales ratingStar periodStartTime periodEndTime imageUrl productCatIds priceDiscountRate shopType sellerCommissionRate shopeeCommissionRate } pageInfo { page limit hasNextPage } } }",
+      "variables": {},
+      "result_path": "data.productOfferV2",
+      "fields": {
+        "item_id": "itemId",
+        "shop_id": "shopId",
+        "name": "productName",
+        "shop_name": "shopName",
+        "product_url": "productLink",
+        "price_min": "priceMin",
+        "price_max": "priceMax",
+        "commission_rate": "commissionRate",
+        "commission_amount": "commission",
+        "sales": "sales",
+        "rating": "ratingStar",
+        "period_start": "periodStartTime",
+        "period_end": "periodEndTime",
+        "image_url": "imageUrl",
+        "category_ids": "productCatIds",
+        "discount_percent": "priceDiscountRate",
+        "shop_types": "shopType",
+        "seller_commission_rate": "sellerCommissionRate",
+        "shopee_commission_rate": "shopeeCommissionRate"
+      },
+      "nodes_path": "nodes",
+      "page_info_path": "pageInfo",
+      "page_fields": {
+        "has_next": "hasNextPage",
+        "page": "page",
+        "limit": "limit"
+      },
+      "literal_arguments": [
+        "keyword",
+        "page",
+        "limit",
+        "sort_type",
+        "shop_id",
+        "category_id",
+        "is_ams_offer",
+        "is_key_seller"
+      ],
+      "literal_integer_arguments": [
+        "page",
+        "limit",
+        "sort_type",
+        "shop_id",
+        "category_id"
+      ],
+      "optional_arguments": [
+        "shop_id",
+        "category_id",
+        "is_ams_offer",
+        "is_key_seller"
+      ],
+      "literal_boolean_arguments": [
+        "is_ams_offer",
+        "is_key_seller"
+      ]
+    },
+    "get": {
+      "operation_name": "GetOffer",
+      "query": "query GetOffer { productOfferV2(itemId:{{item_id}},shopId:{{shop_id}}) { nodes { itemId shopId productName shopName productLink priceMin priceMax commissionRate commission sales ratingStar periodStartTime periodEndTime imageUrl productCatIds priceDiscountRate shopType sellerCommissionRate shopeeCommissionRate } } }",
+      "variables": {},
+      "result_path": "data.productOfferV2",
+      "fields": {
+        "item_id": "itemId",
+        "shop_id": "shopId",
+        "name": "productName",
+        "shop_name": "shopName",
+        "product_url": "productLink",
+        "price_min": "priceMin",
+        "price_max": "priceMax",
+        "commission_rate": "commissionRate",
+        "commission_amount": "commission",
+        "sales": "sales",
+        "rating": "ratingStar",
+        "period_start": "periodStartTime",
+        "period_end": "periodEndTime",
+        "image_url": "imageUrl",
+        "category_ids": "productCatIds",
+        "discount_percent": "priceDiscountRate",
+        "shop_types": "shopType",
+        "seller_commission_rate": "sellerCommissionRate",
+        "shopee_commission_rate": "shopeeCommissionRate"
+      },
+      "nodes_path": "nodes",
+      "literal_arguments": [
+        "item_id",
+        "shop_id"
+      ],
+      "literal_integer_arguments": [
+        "item_id",
+        "shop_id"
+      ]
+    },
+    "link": {
+      "operation_name": "GenerateAffiliateLink",
+      "query": "mutation GenerateAffiliateLink { generateShortLink(input:{originUrl:{{origin_url}},subIds:{{sub_ids}}}) { shortLink } }",
+      "variables": {},
+      "literal_arguments": [
+        "origin_url",
+        "sub_ids"
+      ],
+      "result_path": "data.generateShortLink",
+      "fields": {
+        "affiliate_url": "shortLink"
+      }
+    },
+    "shops": {
+      "operation_name": "SearchShopOffers",
+      "query": "query SearchShopOffers { shopOfferV2(keyword:{{keyword}},page:{{page}},limit:{{limit}},sortType:{{sort_type}},shopId:{{shop_id}},shopType:{{shop_types}},isKeySeller:{{is_key_seller}}) { nodes { commissionRate imageUrl offerLink originalLink shopId shopName ratingStar shopType remainingBudget periodStartTime periodEndTime } pageInfo { page limit hasNextPage } } }",
+      "variables": {},
+      "result_path": "data.shopOfferV2",
+      "fields": {
+        "commission_rate": "commissionRate",
+        "image_url": "imageUrl",
+        "offer_url": "offerLink",
+        "original_url": "originalLink",
+        "shop_id": "shopId",
+        "name": "shopName",
+        "rating": "ratingStar",
+        "shop_types": "shopType",
+        "remaining_budget": "remainingBudget",
+        "period_start": "periodStartTime",
+        "period_end": "periodEndTime"
+      },
+      "literal_arguments": [
+        "keyword",
+        "page",
+        "limit",
+        "sort_type",
+        "shop_id",
+        "shop_types",
+        "is_key_seller"
+      ],
+      "literal_integer_arguments": [
+        "page",
+        "limit",
+        "sort_type",
+        "shop_id"
+      ],
+      "optional_arguments": [
+        "shop_id",
+        "shop_types",
+        "is_key_seller"
+      ],
+      "literal_boolean_arguments": [
+        "is_key_seller"
+      ],
+      "literal_integer_list_arguments": [
+        "shop_types"
+      ]
+    },
+    "campaigns": {
+      "operation_name": "SearchCampaignOffers",
+      "query": "query SearchCampaignOffers { shopeeOfferV2(keyword:{{keyword}},page:{{page}},limit:{{limit}},sortType:{{sort_type}}) { nodes { commissionRate imageUrl offerLink offerName offerType categoryId collectionId periodStartTime periodEndTime } pageInfo { page limit hasNextPage } } }",
+      "variables": {},
+      "result_path": "data.shopeeOfferV2",
+      "fields": {
+        "commission_rate": "commissionRate",
+        "image_url": "imageUrl",
+        "offer_url": "offerLink",
+        "name": "offerName",
+        "offer_type": "offerType",
+        "category_id": "categoryId",
+        "collection_id": "collectionId",
+        "period_start": "periodStartTime",
+        "period_end": "periodEndTime"
+      },
+      "literal_arguments": [
+        "keyword",
+        "page",
+        "limit",
+        "sort_type"
+      ],
+      "literal_integer_arguments": [
+        "page",
+        "limit",
+        "sort_type"
+      ],
+      "optional_arguments": []
+    },
+    "feeds": {
+      "operation_name": "ListProductFeeds",
+      "query": "query ListProductFeeds { listItemFeeds(feedMode:{{feed_mode}}) { feeds { datafeedId datafeedName referenceId description totalCount date feedMode } } }",
+      "variables": {},
+      "result_path": "data.listItemFeeds",
+      "fields": {
+        "datafeed_id": "datafeedId",
+        "name": "datafeedName",
+        "reference_id": "referenceId",
+        "description": "description",
+        "total_count": "totalCount",
+        "date": "date",
+        "feed_mode": "feedMode"
+      },
+      "literal_arguments": [
+        "feed_mode"
+      ],
+      "literal_integer_arguments": [],
+      "optional_arguments": [],
+      "literal_enum_arguments": {
+        "feed_mode": [
+          "FULL",
+          "DELTA"
+        ]
+      }
+    },
+    "feed": {
+      "operation_name": "GetProductFeed",
+      "query": "query GetProductFeed { getItemFeedData(datafeedId:{{datafeed_id}},offset:{{offset}},limit:{{limit}}) { rows { columns updateType } pageInfo { offset limit totalCount hasMore } } }",
+      "variables": {},
+      "result_path": "data.getItemFeedData",
+      "fields": {},
+      "literal_arguments": [
+        "datafeed_id",
+        "offset",
+        "limit"
+      ],
+      "literal_integer_arguments": [
+        "offset",
+        "limit"
+      ],
+      "optional_arguments": []
+    },
+    "conversion": {
+      "operation_name": "GetConversionReport",
+      "query": "query GetConversionReport { conversionReport(purchaseTimeStart:{{purchase_time_start}},purchaseTimeEnd:{{purchase_time_end}},limit:{{limit}},scrollId:{{cursor}},shopId:{{shop_id}},productId:{{product_id}},orderId:{{order_id}},orderStatus:{{order_status}}) { nodes { conversionId purchaseTime clickTime shopeeCommissionCapped sellerCommission totalCommission netCommission mcnManagementFee utmContent campaignType device orders { orderId orderStatus items { shopId shopName itemId itemName actualAmount qty itemTotalCommission itemSellerCommission itemShopeeCommissionCapped displayItemStatus fraudStatus campaignType } } } pageInfo { limit hasNextPage scrollId } } }",
+      "variables": {},
+      "result_path": "data.conversionReport",
+      "fields": {},
+      "literal_arguments": [
+        "purchase_time_start",
+        "purchase_time_end",
+        "limit",
+        "cursor",
+        "shop_id",
+        "product_id",
+        "order_id",
+        "order_status"
+      ],
+      "literal_integer_arguments": [
+        "purchase_time_start",
+        "purchase_time_end",
+        "limit",
+        "shop_id",
+        "product_id"
+      ],
+      "optional_arguments": [
+        "cursor",
+        "shop_id",
+        "product_id",
+        "order_id",
+        "order_status"
+      ],
+      "cursor_single_use": true
+    },
+    "validated": {
+      "operation_name": "GetValidatedReport",
+      "query": "query GetValidatedReport { validatedReport(validationId:{{validation_id}},limit:{{limit}},scrollId:{{cursor}}) { nodes { conversionId purchaseTime clickTime shopeeCommissionCapped sellerCommission totalCommission netCommission mcnManagementFee utmContent campaignType device orders { orderId orderStatus items { shopId shopName itemId itemName actualAmount qty itemTotalCommission itemSellerCommission itemShopeeCommissionCapped displayItemStatus fraudStatus campaignType } } } pageInfo { limit hasNextPage scrollId } } }",
+      "variables": {},
+      "result_path": "data.validatedReport",
+      "fields": {},
+      "literal_arguments": [
+        "validation_id",
+        "limit",
+        "cursor"
+      ],
+      "literal_integer_arguments": [
+        "validation_id",
+        "limit"
+      ],
+      "optional_arguments": [
+        "cursor"
+      ],
+      "cursor_single_use": true
+    }
+  }
+}

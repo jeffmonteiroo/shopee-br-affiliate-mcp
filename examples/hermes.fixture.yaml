@@ -1,0 +1,10 @@
+# Exemplo apenas: não foi escrito no config do Hermes nem executado na VPS.
+# Troque os caminhos pelo destino escolhido APÓS revisão/autorização.
+mcp_servers:
+  shopee-affiliate:
+    command: "/CAMINHO/DO/PROJETO/.venv/bin/python"
+    args: ["/CAMINHO/DO/PROJETO/run.py", "--mode", "fixture"]
+    cwd: "/CAMINHO/DO/PROJETO"
+    timeout: 40
+    connect_timeout: 15
+    supports_parallel_tool_calls: false

@@ -1,0 +1,365 @@
+{
+  "type": "object",
+  "properties": {
+    "profile_version": {
+      "const": 1
+    },
+    "official_docs_verified": {
+      "type": "boolean"
+    },
+    "verification": {
+      "type": "object",
+      "properties": {
+        "source_url": {
+          "type": "string"
+        },
+        "checked_at": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "source_url",
+        "checked_at",
+        "notes"
+      ],
+      "additionalProperties": false
+    },
+    "endpoint": {
+      "type": "string"
+    },
+    "auth_algorithm": {
+      "enum": [
+        "unverified",
+        "sha256_app_timestamp_body_secret"
+      ]
+    },
+    "commission_rate_unit": {
+      "enum": [
+        "unknown",
+        "fraction",
+        "percent"
+      ]
+    },
+    "affiliate_link_hosts": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9.-]+$"
+      }
+    },
+    "sub_ids": {
+      "type": "object",
+      "properties": {
+        "max_count": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5
+        },
+        "max_length": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "official_count_verified": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "official_count_verified",
+        "max_count",
+        "max_length",
+        "pattern"
+      ],
+      "additionalProperties": false
+    },
+    "operations": {
+      "type": "object",
+      "properties": {
+        "search": {
+          "$ref": "#/$defs/operation"
+        },
+        "get": {
+          "$ref": "#/$defs/operation"
+        },
+        "link": {
+          "$ref": "#/$defs/operation"
+        },
+        "shops": {
+          "$ref": "#/$defs/operation"
+        },
+        "campaigns": {
+          "$ref": "#/$defs/operation"
+        },
+        "feeds": {
+          "$ref": "#/$defs/operation"
+        },
+        "feed": {
+          "$ref": "#/$defs/operation"
+        },
+        "conversion": {
+          "$ref": "#/$defs/operation"
+        },
+        "validated": {
+          "$ref": "#/$defs/operation"
+        }
+      },
+      "required": [],
+      "additionalProperties": false
+    }
+  },
+  "required": [
+    "profile_version",
+    "official_docs_verified",
+    "verification",
+    "endpoint",
+    "auth_algorithm",
+    "commission_rate_unit",
+    "affiliate_link_hosts",
+    "sub_ids",
+    "operations"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$defs": {
+    "operation": {
+      "type": "object",
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "variables": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "keyword",
+              "page",
+              "limit",
+              "cursor",
+              "item_id",
+              "shop_id",
+              "origin_url",
+              "sub_ids",
+              "sort_type",
+              "category_id",
+              "is_ams_offer",
+              "is_key_seller",
+              "shop_types",
+              "feed_mode",
+              "datafeed_id",
+              "offset",
+              "purchase_time_start",
+              "purchase_time_end",
+              "product_id",
+              "order_id",
+              "order_status",
+              "validation_id"
+            ]
+          },
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+              },
+              "encoding": {
+                "enum": [
+                  "identity",
+                  "integer"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "encoding"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "result_path": {
+          "type": "string"
+        },
+        "fields": {
+          "type": "object",
+          "propertyNames": {
+            "enum": [
+              "item_id",
+              "shop_id",
+              "name",
+              "shop_name",
+              "product_url",
+              "price_min",
+              "price_max",
+              "commission_rate",
+              "commission_amount",
+              "sales",
+              "rating",
+              "period_start",
+              "period_end",
+              "affiliate_url",
+              "image_url",
+              "category_ids",
+              "discount_percent",
+              "shop_types",
+              "seller_commission_rate",
+              "shopee_commission_rate",
+              "offer_url",
+              "original_url",
+              "shop_types",
+              "remaining_budget",
+              "category_id",
+              "collection_id",
+              "offer_type",
+              "period_start",
+              "period_end",
+              "datafeed_id",
+              "name",
+              "reference_id",
+              "description",
+              "total_count",
+              "date",
+              "feed_mode"
+            ]
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "nodes_path": {
+          "type": "string"
+        },
+        "page_info_path": {
+          "type": "string"
+        },
+        "page_fields": {
+          "type": "object",
+          "properties": {
+            "has_next": {
+              "type": "string"
+            },
+            "page": {
+              "type": "string"
+            },
+            "limit": {
+              "type": "string"
+            },
+            "cursor": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "has_next",
+            "page",
+            "limit"
+          ],
+          "additionalProperties": false
+        },
+        "operation_name": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$"
+        },
+        "literal_arguments": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "origin_url",
+              "sub_ids",
+              "keyword",
+              "page",
+              "limit",
+              "sort_type",
+              "item_id",
+              "shop_id",
+              "category_id",
+              "is_ams_offer",
+              "is_key_seller",
+              "shop_types",
+              "feed_mode",
+              "datafeed_id",
+              "offset",
+              "purchase_time_start",
+              "purchase_time_end",
+              "product_id",
+              "order_id",
+              "order_status",
+              "validation_id",
+              "cursor"
+            ]
+          }
+        },
+        "literal_integer_arguments": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "page",
+              "limit",
+              "sort_type",
+              "item_id",
+              "shop_id",
+              "category_id",
+              "offset",
+              "purchase_time_start",
+              "purchase_time_end",
+              "product_id",
+              "validation_id"
+            ]
+          }
+        },
+        "optional_arguments": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string"
+          }
+        },
+        "literal_boolean_arguments": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "is_ams_offer",
+              "is_key_seller"
+            ]
+          }
+        },
+        "literal_enum_arguments": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z_]*$"
+            }
+          }
+        },
+        "cursor_single_use": {
+          "type": "boolean"
+        },
+        "literal_integer_list_arguments": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "shop_types"
+            ]
+          }
+        }
+      },
+      "required": [
+        "query",
+        "variables",
+        "result_path",
+        "fields"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
