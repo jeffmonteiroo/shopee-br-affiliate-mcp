@@ -19,3 +19,27 @@ jobs:
         env:
           PYTHONPATH: src:tests
       - run: python local_test.py --fixture --extended
+      - name: Build Docker image
+        if: matrix.python-version == '3.12'
+        run: docker build -t shopee-mcp:test .
+      - name: Test MCP in Docker
+        if: matrix.python-version == '3.12'
+        run: |
+          python - <<'PY'
+          import asyncio
+          from mcp import ClientSession, StdioServerParameters
+          from mcp.client.stdio import stdio_client
+
+          async def check():
+              params = StdioServerParameters(command="docker", args=["run", "--rm", "-i", "shopee-mcp:test", "--mode", "fixture"])
+              async with stdio_client(params) as (read, write):
+                  async with ClientSession(read, write) as session:
+                      initialized = await session.initialize()
+                      assert initialized.serverInfo.version == "0.3.0"
+                      assert len((await session.list_tools()).tools) == 17
+                      status = await session.call_tool("affiliate_status", {})
+                      assert not status.isError and status.structuredContent["synthetic"]
+              print("Docker MCP handshake, discovery and status: OK")
+
+          asyncio.run(asyncio.wait_for(check(), 30))
+          PY
