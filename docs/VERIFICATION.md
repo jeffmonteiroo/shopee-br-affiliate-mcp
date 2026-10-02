@@ -1,4 +1,13 @@
-# Verificação — 0.4.0, 2026-10-01
+# Verificação — 0.5.0, 2026-10-02
+
+77 testes locais passaram. A revisão adicional verifica rejeição da chave privada
+antes de qualquer consulta Shopee, chave não refletida em respostas, autorização
+com PKCE, invalidação dos tokens antigos na migração/rotação e callbacks locais
+para os harnesses com bloqueio de destinos externos. Produção exige hash válido.
+O fluxo com credenciais reais e a autenticação interativa dos clientes ainda
+precisam ser concluídos pelo proprietário. Nenhum segredo real foi usado nos testes.
+
+## Verificação anterior — 0.4.0
 
 72 testes locais passaram. A ampliação verifica conexão após reinício, conservação
 da referência da conta, refresh e revogação persistidos, renovação além dos primeiros

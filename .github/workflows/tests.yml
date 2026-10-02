@@ -35,7 +35,7 @@ jobs:
               async with stdio_client(params) as (read, write):
                   async with ClientSession(read, write) as session:
                       initialized = await session.initialize()
-                      assert initialized.serverInfo.version == "0.4.0"
+                      assert initialized.serverInfo.version == "0.5.0"
                       assert len((await session.list_tools()).tools) == 17
                       status = await session.call_tool("affiliate_status", {})
                       assert not status.isError and status.structuredContent["synthetic"]
@@ -64,7 +64,7 @@ jobs:
                   try:
                       r = httpx.get(origin + "/health", timeout=2)
                       if r.status_code == 200:
-                          assert r.json()["version"] == "0.4.0"
+                          assert r.json()["version"] == "0.5.0"
                           return
                   except httpx.HTTPError:
                       pass
@@ -74,6 +74,7 @@ jobs:
               subprocess.run(["docker", "run", "-d", "--name", "shopee-remote-test",
                   "-p", "127.0.0.1:8765:8765", "-v", "shopee-oauth-test:/app/data",
                   "-e", "MCP_CREDENTIALS_KEY", "-e", "MCP_PUBLIC_URL=" + origin,
+                  "-e", "MCP_OWNER_KEY_SHA256=" + "a" * 64,
                   "shopee-mcp:remote"], check=True)
               healthy()
               client = httpx.post(origin + "/register", json={

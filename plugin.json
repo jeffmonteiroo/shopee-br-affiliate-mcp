@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "shopee-affiliate-mcp",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "MCP de afiliados Shopee Brasil: ofertas, feeds, links, relatórios e histórico local.",
   "author": {
     "name": "Shopee Affiliate MCP contributors"

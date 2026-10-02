@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.5.0 — 2026-10-02
+
+- Chave privada do proprietário exigida antes de validar Shopee ou emitir tokens.
+- Hash obrigatório no servidor remoto; migração e rotação revogam conexões antigas.
+- Guia de OAuth para Codex, Hermes e Claude Code, com callbacks locais.
+- Testes de autorização privada, revogação na migração/rotação e isolamento de callbacks.
+
 ## 0.4.0 — 2026-10-01
 
 - Credenciais, tokens e registros OAuth persistidos em SQLite com Fernet e chave externa obrigatória.

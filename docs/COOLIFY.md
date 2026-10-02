@@ -1,4 +1,4 @@
-# Deploy no Coolify — 0.4.0
+# Deploy no Coolify — 0.5.0
 
 Uma aplicação Python, um volume SQLite e uma chave secreta. Não precisa de
 Postgres, Redis ou serviço externo de login. Use uma réplica e um worker.
@@ -36,11 +36,12 @@ o alvo `remote` inicia `oauth-http` em `0.0.0.0:8765`.
    OAuth antes de adicionar a conexão ao cliente.
 
 ```dotenv
+MCP_OWNER_KEY_SHA256=HASH_DA_CHAVE_PRIVADA
 MCP_PUBLIC_URL=https://mcp.seu-dominio.com
 MCP_STATE_DB=/app/data/oauth.sqlite3
 MCP_CREDENTIALS_KEY=COLE_A_CHAVE_GERADA
 MCP_OAUTH_REDIRECT_URIS=["http://localhost:27890/callback"]
-MCP_ALLOW_LOOPBACK_CALLBACKS=false
+MCP_ALLOW_LOOPBACK_CALLBACKS=true
 ```
 
 A lista de callback localhost acima é para Hermes; ChatGPT é permitido por
@@ -65,8 +66,8 @@ python -m shopee_mcp.healthcheck
 
 ## Uso
 
-Adicione `https://mcp.seu-dominio.com/mcp` ao ChatGPT/Hermes com OAuth. O navegador
-abre a tela de App ID e App Secret da Open API de Afiliados. Você informa uma vez
+Adicione `https://mcp.seu-dominio.com/mcp` ao ChatGPT/Hermes com OAuth. Siga [PRIVATE.md](PRIVATE.md) para configurar os clientes. O navegador
+abre a tela da chave privada, App ID e App Secret da Open API de Afiliados. Você informa uma vez
 por conexão, e o cliente recebe tokens próprios. As credenciais ficam
 criptografadas no banco do volume da VPS, preservadas em reinícios e deploys.
 

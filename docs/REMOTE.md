@@ -1,6 +1,7 @@
-# Conexão remota com uma única tela — 0.4.0
+# Conexão remota com uma única tela — 0.5.0
 
-O cliente abre uma tela de App ID e App Secret Shopee. Não há cadastro nem
+O cliente abre uma tela da chave privada, App ID e App Secret Shopee.
+A chave privada é obrigatória para autorizar o acesso; veja [PRIVATE.md](PRIVATE.md). Não há cadastro nem
 senha adicional. As credenciais são enviadas diretamente ao servidor HTTPS,
 validadas com uma pesquisa de produto e armazenadas criptografadas em SQLite num volume persistente. O cliente
 MCP recebe um token próprio, sem receber os segredos Shopee.
@@ -20,6 +21,7 @@ Para health checks, use `/health` com o `Host` público configurado.
 Com Docker Compose, configure no ambiente ou em um `.env` local da VPS:
 
 ```dotenv
+MCP_OWNER_KEY_SHA256=HASH_DA_CHAVE_PRIVADA
 MCP_PUBLIC_URL=https://mcp.example.com
 MCP_STATE_DB=/app/data/oauth.sqlite3
 MCP_CREDENTIALS_KEY=COLE_A_CHAVE_FERNET_GERADA

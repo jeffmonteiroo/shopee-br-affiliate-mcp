@@ -6,12 +6,13 @@ services:
     restart: unless-stopped
     command: ["--transport", "oauth-http", "--port", "8765"]
     environment:
+      MCP_OWNER_KEY_SHA256: ${MCP_OWNER_KEY_SHA256:?Defina o hash da sua chave privada}
       MCP_CREDENTIALS_KEY: ${MCP_CREDENTIALS_KEY:?Defina uma chave Fernet permanente}
       MCP_STATE_DB: /app/data/oauth.sqlite3
       MCP_PUBLIC_URL: ${MCP_PUBLIC_URL:?Defina a origem HTTPS do servidor}
       SHOPEE_VERIFIED_PROFILE: /app/examples/profile.official.json
       MCP_OAUTH_REDIRECT_URIS: ${MCP_OAUTH_REDIRECT_URIS:-[]}
-      MCP_ALLOW_LOOPBACK_CALLBACKS: "false"
+      MCP_ALLOW_LOOPBACK_CALLBACKS: ${MCP_ALLOW_LOOPBACK_CALLBACKS:-true}
     ports:
       - "127.0.0.1:8765:8765"
     volumes:

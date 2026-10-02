@@ -106,7 +106,8 @@ def live_factory(*, validate=True):
 
 class OAuthConnections:
     # ponytail: one worker, one encrypted SQLite snapshot; no extra database service.
-    def __init__(self, origin, factory, *, clock=time.time, redirects=(), allow_loopback=False, store=None, restore_factory=None):
+    def __init__(self, origin, factory, *, clock=time.time, redirects=(), allow_loopback=False, store=None, restore_factory=None, owner_hash=""):
+        self.owner_hash = owner_hash
         self.origin, self.resource, self.factory = origin, origin + "/mcp", factory
         self.clock, self.redirects, self.allow_loopback = clock, set(redirects), allow_loopback
         self.clients, self.pending, self.codes, self.access, self.refresh = {}, {}, {}, {}, {}
@@ -119,7 +120,7 @@ class OAuthConnections:
     def save(self):
         if not self.store:
             return
-        state = {"version": 1, "origin": self.origin,
+        state = {"version": 1, "origin": self.origin, "owner_policy": self.owner_hash,
             "pepper": base64.urlsafe_b64encode(self.pepper).decode(),
             "grants": {k: asdict(v) for k, v in self.grants.items()},
             "accounts": {k: {"account": self.accounts[k].account, **asdict(v)}
@@ -137,6 +138,13 @@ class OAuthConnections:
                 return
             if state["version"] != 1 or state["origin"] != self.origin:
                 raise ValueError
+            previous_policy = state.get("owner_policy", "")
+            if previous_policy and not self.owner_hash:
+                raise SafeError("CONFIGURATION", "A chave privada do proprietário é obrigatória para este banco.")
+            if previous_policy != self.owner_hash:
+                # Switching owner keys revokes every prior connection, including legacy public grants.
+                self.save()
+                return
             self.pepper = base64.urlsafe_b64decode(state["pepper"])
             if len(self.pepper) != 32:
                 raise ValueError
@@ -243,7 +251,7 @@ class OAuthConnections:
         pending = self.pending.get(flow)
         return pending if pending and pending[2] > self.clock() else None
 
-    async def connect(self, flow, csrf, cookie, credentials):
+    async def connect(self, flow, csrf, cookie, credentials, owner_key=""):
         async with self.connect_lock:
             pending = self.pending_flow(flow)
             if (not pending or not pending[3] or not csrf or not cookie
@@ -257,6 +265,9 @@ class OAuthConnections:
             if len(self.auth_attempts) >= 10 or len(self.grants) >= LIMIT:
                 raise SafeError("CONNECT_LIMIT", "Muitas conexões; aguarde um minuto.")
             self.auth_attempts.append(now)
+            if self.owner_hash and (not 1 <= len(owner_key) <= 512 or not secrets.compare_digest(
+                    hashlib.sha256(owner_key.encode()).hexdigest(), self.owner_hash)):
+                raise SafeError("ACCESS_DENIED", "Chave de acesso privada inválida.")
             if (not re.fullmatch(r"[A-Za-z0-9_-]{1,128}", credentials.app_id)
                     or not 1 <= len(credentials.secret) <= 512
                     or any(ord(c) < 33 or ord(c) > 126 for c in credentials.secret)):
@@ -390,7 +401,7 @@ class RemoteGuard:
         await self.app(scope, replay, secured_send)
 
 
-def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=None, allow_loopback=None, store=None, restore_factory=None):
+def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=None, allow_loopback=None, store=None, restore_factory=None, owner_hash=None):
     origin = public_origin(public_url)
     if redirects is None:
         try:
@@ -399,13 +410,19 @@ def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=Non
                 raise ValueError
         except ValueError:
             raise SafeError("CONFIGURATION", "MCP_OAUTH_REDIRECT_URIS deve ser uma lista JSON de callbacks.") from None
+    if owner_hash is None:
+        owner_hash = os.getenv("MCP_OWNER_KEY_SHA256", "")
+    if owner_hash and not re.fullmatch(r"[a-f0-9]{64}", owner_hash):
+        raise SafeError("CONFIGURATION", "MCP_OWNER_KEY_SHA256 deve ser o SHA256 de uma chave privada aleatória.")
     if factory is None:
+        if not owner_hash:
+            raise SafeError("CONFIGURATION", "Configure MCP_OWNER_KEY_SHA256 para autorizar somente o proprietário.")
         factory = live_factory()
         restore_factory = live_factory(validate=False)
         store = store or EncryptedStore(os.getenv("MCP_STATE_DB", "/app/data/oauth.sqlite3"),
             os.getenv("MCP_CREDENTIALS_KEY", ""))
     provider = OAuthConnections(origin, factory, clock=clock, redirects=redirects,
-        store=store, restore_factory=restore_factory,
+        store=store, restore_factory=restore_factory, owner_hash=owner_hash,
         allow_loopback=allow_loopback if allow_loopback is not None else os.getenv("MCP_ALLOW_LOOPBACK_CALLBACKS") == "true")
     registration = ClientRegistrationOptions(enabled=True, valid_scopes=[SCOPE], default_scopes=[SCOPE])
     revocation = RevocationOptions(enabled=True)
@@ -463,11 +480,14 @@ def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=Non
             client = provider.clients[pending[0]]
             destination = html.escape(str(pending[1].redirect_uri))
             name = html.escape(client.client_name or "Cliente MCP")
+            owner_field = ('<label for="owner_key">Chave de acesso privada</label>'
+                '<input id="owner_key" name="owner_key" type="password" maxlength="512" autocomplete="off" required>') if provider.owner_hash else ""
             page = f'''<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Conectar Shopee</title>
 <style>body{{font:16px system-ui;background:#f5f5f5;color:#222;margin:0;padding:24px}}main{{max-width:440px;margin:8vh auto;padding:28px;background:white;border-radius:16px}}h1{{font-size:26px}}label{{display:block;margin-top:20px}}input,button{{box-sizing:border-box;width:100%;padding:12px;margin-top:8px;border:1px solid #ccc;border-radius:8px;font:inherit}}button{{background:#b9380a;color:white;border:0;margin-top:24px}}small{{display:block;margin-top:20px;line-height:1.5}}code{{overflow-wrap:anywhere}}</style>
 <main><h1>Conectar sua Shopee</h1><p>Informe as credenciais da Open API de Afiliados. Não é a senha da sua conta Shopee.</p>
 <p>Você autoriza <strong>{name}</strong> a pesquisar ofertas, gerar links e consultar seus relatórios enquanto esta conexão estiver autorizada.</p><small>O acesso será entregue a: <code>{destination}</code>. Confira o destino antes de continuar.</small>
 <form method="post" action="/connect"><input type="hidden" name="flow" value="{html.escape(flow)}"><input type="hidden" name="csrf" value="{csrf}">
+{owner_field}
 <label for="app_id">App ID</label><input id="app_id" name="app_id" type="password" maxlength="128" autocomplete="off" required>
 <label for="secret">App Secret</label><input id="secret" name="secret" type="password" maxlength="512" autocomplete="off" required>
 <button>Conectar e autorizar</button></form><small>As credenciais ficam criptografadas neste servidor. A conexão é renovada automaticamente; após 90 dias sem renovação, conecte novamente. Serviço independente, sem vínculo oficial com a Shopee.</small></main></html>'''
@@ -481,7 +501,7 @@ def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=Non
             form = await request.form()
             credentials = Credentials(str(form.get("app_id", "")), str(form.get("secret", "")))
             target = await provider.connect(str(form.get("flow", "")), str(form.get("csrf", "")),
-                request.cookies.get(COOKIE, ""), credentials)
+                request.cookies.get(COOKIE, ""), credentials, str(form.get("owner_key", "")))
         except SafeError as error:
             return HTMLResponse(html.escape(error.message) + " Volte e tente conectar novamente.", status_code=400)
         except Exception:
@@ -497,7 +517,7 @@ def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=Non
     authenticated = RequireAuthMiddleware(manager.handle_request, [SCOPE],
         resource_metadata_url=AnyHttpUrl(origin + "/.well-known/oauth-protected-resource/mcp"))
     async def health(request):
-        return JSONResponse({"status": "ok", "version": "0.4.0"})
+        return JSONResponse({"status": "ok", "version": "0.5.0"})
 
     routes.extend([Route("/health", health, methods=["GET"]),
         Route("/connect", connect, methods=["GET", "POST"]),

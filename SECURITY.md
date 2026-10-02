@@ -33,6 +33,12 @@ isola conexões e persiste as credenciais criptografadas em SQLite. Não usa um 
 externo de identidade e não cria contas de usuários. Ainda é experimental;
 reinícios preservam o registro DCR e as conexões com o volume e a chave corretos.
 
+O modo remoto de produção exige `MCP_OWNER_KEY_SHA256`. Sem a chave privada
+correta no formulário, não valida as credenciais Shopee nem emite tokens.
+Ativar essa proteção ou trocar o hash revoga conexões anteriores. Discovery
+e registro OAuth permanecem públicos, sujeitos aos limites do servidor; não
+são acesso à conta. Proteja a chave aleatória e os tokens locais dos clientes.
+
 Os segredos Shopee não são retornados ao cliente MCP. As conexões expiram após 90 dias sem refresh, com renovação rotativa e revogação.
 A chave `MCP_CREDENTIALS_KEY` é um segredo de runtime separado do banco;
 um administrador com acesso aos dois pode descriptografar as credenciais.

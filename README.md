@@ -1,4 +1,4 @@
-# Shopee Affiliate MCP — 0.4.0
+# Shopee Affiliate MCP — 0.5.0
 
 Servidor MCP em Python para a Open API de Afiliados Shopee Brasil. Expõe 17 ferramentas por stdio ou Streamable HTTP com OAuth e usa consultas GraphQL assinadas com App ID e Secret da conta configurada.
 
@@ -35,6 +35,9 @@ Esta versão é inicial: as novas ferramentas passaram em testes simulados e ain
 | `get_offer_history` | Histórico local separado por conta, modo, item e loja |
 
 ## Conectar pelo ChatGPT ou Hermes
+
+Para uso pessoal em Codex, Hermes e Claude Code, siga [PRIVATE.md](docs/PRIVATE.md).
+O formulário exige uma chave privada antes de autorizar as credenciais Shopee.
 
 Para subir no Coolify, siga [o guia de configuração](docs/COOLIFY.md).
 
@@ -122,7 +125,7 @@ O transporte `private-http` permanece experimental, restrito ao loopback e prote
 PYTHONPATH=src:tests .venv/bin/python -m unittest discover -s tests -v
 ```
 
-CI no GitHub testa Python 3.11 e 3.12. A verificação local passou em 72 testes, incluindo MCP stdio real, assinaturas, precisão, relatórios paginados, batch com resultado incerto, redirecionamentos e isolamento do histórico. O teste HTTP em memória ainda registra avisos de encerramento do SDK; detalhes em [VERIFICATION.md](docs/VERIFICATION.md).
+CI no GitHub testa Python 3.11 e 3.12. A verificação local passou em 77 testes, incluindo MCP stdio real, assinaturas, precisão, relatórios paginados, batch com resultado incerto, redirecionamentos e isolamento do histórico. O teste HTTP em memória ainda registra avisos de encerramento do SDK; detalhes em [VERIFICATION.md](docs/VERIFICATION.md).
 
 Limites atuais: sem estoque/frete/cupons/avaliações textuais, publicação em redes sociais, compras, administração de vendedor ou métricas de todos os cliques. O escopo é a API de afiliados disponível à conta.
 

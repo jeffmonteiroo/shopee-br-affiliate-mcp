@@ -73,9 +73,9 @@ class RemoteTests(unittest.IsolatedAsyncioTestCase):
         hidden = dict(re.findall(r'name="(flow|csrf)" value="([^"]+)"', r.text))
         return hidden, r
 
-    async def code(self, client, app_id='synthetic-app-one', secret='synthetic-secret-one'):
+    async def code(self, client, app_id='synthetic-app-one', secret='synthetic-secret-one', owner_key=''):
         form, _ = await self.form(client)
-        r = await self.client.post('/connect', data=form | {'app_id': app_id, 'secret': secret},
+        r = await self.client.post('/connect', data=form | {'app_id': app_id, 'secret': secret, 'owner_key': owner_key},
             headers={'Origin': ORIGIN})
         self.assertEqual(r.status_code, 303, r.text)
         params = parse_qs(urlsplit(r.headers['location']).query)
@@ -114,6 +114,76 @@ class RemoteTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('resource_metadata=', r.headers['www-authenticate'])
         self.assertEqual((await self.mcp('synthetic-invalid-token')).status_code, 401)
 
+    async def test_owner_key_required_before_shopee_probe_and_never_echoed(self):
+        owner_key = 'synthetic-owner-access-key-for-tests'
+        provider = self.app.state.oauth
+        provider.owner_hash = hashlib.sha256(owner_key.encode()).hexdigest()
+        client = await self.register()
+        form, page = await self.form(client)
+        self.assertIn('name="owner_key"', page.text)
+        data = form | {'app_id': 'synthetic-app', 'secret': 'synthetic-secret'}
+        for key in ['', 'synthetic-wrong-owner-key']:
+            response = await self.client.post('/connect', data=data | {'owner_key': key}, headers={'Origin': ORIGIN})
+            self.assertEqual(response.status_code, 400)
+            self.assertFalse(self.created)
+            self.assertFalse(provider.grants)
+            self.assertFalse(provider.credentials)
+        response = await self.client.post('/connect', data=data | {'owner_key': owner_key}, headers={'Origin': ORIGIN})
+        self.assertEqual(response.status_code, 303, response.text)
+        self.assertNotIn(owner_key, response.text + response.headers['location'])
+        code = parse_qs(urlsplit(response.headers['location']).query)['code'][0]
+        response = await self.exchange(client, code)
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual((await self.mcp(response.json()['access_token'])).status_code, 200)
+
+    async def test_private_mode_migration_revokes_legacy_and_rotated_owner_grants(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = directory + '/oauth.sqlite3'
+            key = Fernet.generate_key()
+            self.app.state.oauth.store = EncryptedStore(path, key)
+            _, token = await self.token()
+            await self.app.state.oauth.close()
+            other = build_remote_app(ORIGIN, factory=self.factory, store=EncryptedStore(path, key),
+                owner_hash=hashlib.sha256(b'synthetic-owner-one').hexdigest())
+            await other.state.oauth.restore()
+            self.assertIsNone(await other.state.oauth.load_access_token(token['access_token']))
+            self.assertFalse(other.state.oauth.accounts)
+            self.assertFalse(other.state.oauth.clients)
+            await other.state.oauth.close()
+            removed = build_remote_app(ORIGIN, factory=self.factory, store=EncryptedStore(path, key))
+            with self.assertRaises(SafeError):
+                await removed.state.oauth.restore()
+            rotated = build_remote_app(ORIGIN, factory=self.factory, store=EncryptedStore(path, key),
+                owner_hash=hashlib.sha256(b'synthetic-owner-two').hexdigest())
+            await rotated.state.oauth.restore()
+            self.assertFalse(rotated.state.oauth.grants)
+            await rotated.state.oauth.close()
+
+    async def test_loopback_callbacks_for_native_harnesses_keep_external_hosts_blocked(self):
+        self.app.state.oauth.allow_loopback = True
+        for callback in ['http://127.0.0.1:52439/callback/synthetic-codex',
+                         'http://localhost:27890/callback', 'http://localhost:27891/callback']:
+            await self.register(callback)
+        for callback in ['http://127.0.0.1.evil.invalid:27891/callback',
+                         'http://localhost@evil.invalid/callback', 'http://192.168.1.1/callback']:
+            self.assertFalse(self.app.state.oauth.allowed_redirect(callback))
+
+    async def test_rotating_owner_key_revokes_access_and_refresh_after_restart(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = directory + '/oauth.sqlite3'
+            key = Fernet.generate_key()
+            self.app.state.oauth.store = EncryptedStore(path, key)
+            self.app.state.oauth.owner_hash = hashlib.sha256(b'synthetic-original-owner').hexdigest()
+            _, token = await self.token(owner_key='synthetic-original-owner')
+            await self.app.state.oauth.close()
+            other = build_remote_app(ORIGIN, factory=self.factory, store=EncryptedStore(path, key),
+                owner_hash=hashlib.sha256(b'synthetic-new-owner').hexdigest())
+            await other.state.oauth.restore()
+            self.assertIsNone(await other.state.oauth.load_access_token(token['access_token']))
+            self.assertNotIn(token['refresh_token'], other.state.oauth.refresh)
+            self.assertFalse(other.state.oauth.credentials)
+            await other.state.oauth.close()
+
     async def test_full_flow_account_isolation_and_shared_limits(self):
         a, ta = await self.token()
         b, tb = await self.token(app_id='synthetic-app-two', secret='synthetic-secret-two')
@@ -125,7 +195,7 @@ class RemoteTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.created), 2)
         init = await self.mcp(ta['access_token'], 'initialize', {'protocolVersion': '2025-06-18',
             'capabilities': {}, 'clientInfo': {'name': 'test', 'version': '1'}})
-        self.assertEqual(init.json()['result']['serverInfo']['version'], '0.4.0')
+        self.assertEqual(init.json()['result']['serverInfo']['version'], '0.5.0')
         tools = (await self.mcp(ta['access_token'], 'tools/list', {})).json()['result']['tools']
         self.assertEqual(len(tools), 17)
         self.assertTrue(all(t['securitySchemes'][0]['type'] == 'oauth2' for t in tools))
@@ -358,6 +428,14 @@ class LiveFactoryTests(unittest.IsolatedAsyncioTestCase):
 
 
 class ConfigurationTests(unittest.TestCase):
+    def test_production_remote_requires_valid_owner_hash(self):
+        with patch.dict('os.environ', {'MCP_OWNER_KEY_SHA256': ''}):
+            with self.assertRaises(SafeError) as error:
+                build_remote_app(ORIGIN)
+            self.assertIn('MCP_OWNER_KEY_SHA256', error.exception.message)
+        with self.assertRaises(SafeError):
+            build_remote_app(ORIGIN, owner_hash='invalid-hash')
+
     def test_public_url_rejects_insecure_remote_or_paths(self):
         from shopee_mcp.remote import public_origin
         for url in ['', 'http://example.com', 'https://example.com/mcp',
