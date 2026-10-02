@@ -4,12 +4,12 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "shopee-affiliate-mcp"
-version = "0.3.0"
+version = "0.4.0"
 description = "Shopee Brazil Affiliate MCP: offers, feeds, links and commission reports"
 readme = "README.md"
 license = {file = "LICENSE"}
 requires-python = ">=3.11"
-dependencies = ["mcp==1.21.1", "httpx==0.28.1", "jsonschema==4.25.1", "uvicorn==0.38.0"]
+dependencies = ["mcp==1.21.1", "httpx==0.28.1", "jsonschema==4.25.1", "uvicorn==0.38.0", "cryptography==50.0.2"]
 
 [project.scripts]
 shopee-affiliate-mcp = "shopee_mcp.server:main"

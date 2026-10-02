@@ -4,6 +4,7 @@ import hashlib
 import json
 import re
 import time
+import tempfile
 import unittest
 from unittest.mock import patch
 from urllib.parse import parse_qs, urlsplit
@@ -14,6 +15,8 @@ from mcp.client.streamable_http import streamablehttp_client
 
 from shopee_mcp.core import Credentials, SafeError, SignedClient, load_service, sign_payload
 from shopee_mcp.remote import ACCESS_TTL, SESSION_TTL, build_remote_app, live_factory
+from shopee_mcp.storage import EncryptedStore
+from cryptography.fernet import Fernet
 from support import ROOT
 
 ORIGIN = 'https://mcp.example.invalid'
@@ -34,6 +37,10 @@ class RemoteTests(unittest.IsolatedAsyncioTestCase):
             service.account = account
             return service
         self.app = build_remote_app(ORIGIN, factory=factory, clock=lambda: self.now, redirects=[CALLBACK])
+        self.factory = factory
+        await self.start_app()
+
+    async def start_app(self):
         self.ready, self.stop = asyncio.Event(), asyncio.Event()
         async def run_lifespan():
             async with self.app.router.lifespan_context(self.app):
@@ -118,7 +125,7 @@ class RemoteTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(len(self.created), 2)
         init = await self.mcp(ta['access_token'], 'initialize', {'protocolVersion': '2025-06-18',
             'capabilities': {}, 'clientInfo': {'name': 'test', 'version': '1'}})
-        self.assertEqual(init.json()['result']['serverInfo']['version'], '0.3.0')
+        self.assertEqual(init.json()['result']['serverInfo']['version'], '0.4.0')
         tools = (await self.mcp(ta['access_token'], 'tools/list', {})).json()['result']['tools']
         self.assertEqual(len(tools), 17)
         self.assertTrue(all(t['securitySchemes'][0]['type'] == 'oauth2' for t in tools))
@@ -184,6 +191,81 @@ class RemoteTests(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(r.status_code, 200, r.text)
         self.assertEqual((await self.mcp(newer['access_token'])).status_code, 401)
         self.assertFalse(self.app.state.oauth.accounts)
+
+    async def test_refresh_extends_connection_beyond_first_ninety_days(self):
+        client, token = await self.token()
+        self.now += SESSION_TTL - 60
+        r = await self.client.post('/token', data={'grant_type': 'refresh_token',
+            'client_id': client['client_id'], 'refresh_token': token['refresh_token']})
+        self.assertEqual(r.status_code, 200, r.text)
+        self.now += 120
+        self.assertEqual((await self.mcp(r.json()['access_token'])).status_code, 200)
+
+    async def test_encrypted_restart_rotation_and_revocation_persist(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = directory + '/oauth.sqlite3'
+            key = Fernet.generate_key()
+            self.app.state.oauth.store = EncryptedStore(path, key)
+            client, token = await self.token()
+            account = self.app.state.oauth.accounts.copy().popitem()[1].account
+            with open(path, 'rb') as database:
+                content = database.read()
+                self.assertNotIn(b'synthetic-secret-one', content)
+                self.assertNotIn(token['access_token'].encode(), content)
+
+            async def restart():
+                await self.client.aclose()
+                self.stop.set()
+                await self.lifespan_task
+                self.app = build_remote_app(ORIGIN, factory=self.factory, clock=lambda: self.now,
+                    redirects=[CALLBACK], store=EncryptedStore(path, key))
+                await self.start_app()
+
+            await restart()
+            r = await self.mcp(token['access_token'])
+            self.assertEqual(r.status_code, 200, r.text)
+            self.assertEqual(r.json()['result']['structuredContent']['account_reference'], account)
+            self.now += ACCESS_TTL + 1
+            form = {'grant_type': 'refresh_token', 'client_id': client['client_id'],
+                'refresh_token': token['refresh_token']}
+            r = await self.client.post('/token', data=form)
+            self.assertEqual(r.status_code, 200, r.text)
+            newer = r.json()
+            await restart()
+            self.assertEqual((await self.client.post('/token', data=form)).status_code, 400)
+            self.assertEqual((await self.mcp(newer['access_token'])).status_code, 200)
+            await self.client.post('/revoke', data={'client_id': client['client_id'],
+                'token': newer['refresh_token']})
+            await restart()
+            self.assertEqual((await self.mcp(newer['access_token'])).status_code, 401)
+            self.assertFalse(self.app.state.oauth.accounts)
+            self.assertFalse(self.app.state.oauth.credentials)
+            self.app.state.oauth.store.close()
+            self.app.state.oauth.store = None
+
+    async def test_restored_live_service_does_not_probe_shopee_on_restart(self):
+        with patch.dict('os.environ', {'SHOPEE_VERIFIED_PROFILE': str(ROOT/'examples/profile.official.json')}):
+            with patch.object(SignedClient, 'execute', side_effect=AssertionError('No startup API call')):
+                service = await live_factory(validate=False)(Credentials('synthetic-app', 'synthetic-secret'), 'synthetic-account')
+                await service.provider.client.close()
+
+    async def test_changed_origin_refuses_to_restore_without_overwriting(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = directory + '/oauth.sqlite3'
+            key = Fernet.generate_key()
+            self.app.state.oauth.store = EncryptedStore(path, key)
+            await self.token()
+            await self.app.state.oauth.close()
+            with open(path, 'rb') as database:
+                before = database.read()
+            other = build_remote_app('https://other.example.invalid', factory=self.factory,
+                store=EncryptedStore(path, key))
+            with self.assertRaises(SafeError):
+                await other.state.oauth.restore()
+            with open(path, 'rb') as database:
+                self.assertEqual(before, database.read())
+
+    async def test_inactive_connection_expires(self):
         _, token = await self.token()
         self.now += SESSION_TTL + 1
         self.assertEqual((await self.mcp(token['access_token'])).status_code, 401)

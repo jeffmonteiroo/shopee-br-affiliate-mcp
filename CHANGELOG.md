@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.4.0 — 2026-10-01
+
+- Credenciais, tokens e registros OAuth persistidos em SQLite com Fernet e chave externa obrigatória.
+- Reinícios preservam conexões; refresh prolonga o prazo por 90 dias, substituindo o limite absoluto de 24 horas.
+- Falha segura com chave incorreta, origem alterada ou segundo processo usando o banco.
+- Docker target `remote`, volume persistente no Compose e guia de configuração Coolify.
+- Testes de reinício, rotação/revogação persistidas, criptografia e bloqueio de processo.
+
 ## 0.3.0 — 2026-10-01
 
 - Transporte `oauth-http` com cadastro dinâmico de clientes, PKCE S256, refresh rotativo e revogação.

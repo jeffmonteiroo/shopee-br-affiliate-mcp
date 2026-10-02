@@ -1,9 +1,11 @@
-# Conexão remota com uma única tela — 0.3.0
+# Conexão remota com uma única tela — 0.4.0
 
 O cliente abre uma tela de App ID e App Secret Shopee. Não há cadastro nem
 senha adicional. As credenciais são enviadas diretamente ao servidor HTTPS,
-validadas com uma pesquisa de produto e mantidas somente na memória. O cliente
+validadas com uma pesquisa de produto e armazenadas criptografadas em SQLite num volume persistente. O cliente
 MCP recebe um token próprio, sem receber os segredos Shopee.
+
+No Coolify, siga [COOLIFY.md](COOLIFY.md).
 
 ## Na VPS
 
@@ -19,10 +21,14 @@ Com Docker Compose, configure no ambiente ou em um `.env` local da VPS:
 
 ```dotenv
 MCP_PUBLIC_URL=https://mcp.example.com
+MCP_STATE_DB=/app/data/oauth.sqlite3
+MCP_CREDENTIALS_KEY=COLE_A_CHAVE_FERNET_GERADA
 MCP_OAUTH_REDIRECT_URIS=["http://localhost:27890/callback"]
 ```
 
-Esse arquivo contém configuração pública; não recebe App ID ou Secret.
+Esse arquivo contém a chave de criptografia; proteja-o e não envie ao GitHub.
+Não recebe App ID ou App Secret Shopee. Gere e guarde a chave conforme
+[COOLIFY.md](COOLIFY.md), e preserve o volume entre deploys.
 
 ```sh
 docker compose -f compose.remote.yaml up -d --build
@@ -33,10 +39,11 @@ instalado no host. Se o proxy roda em container ou no Coolify, conecte os dois
 containers à rede privada apropriada e aponte o proxy para a porta 8765 do
 serviço. Não deixe essa porta HTTP exposta diretamente na internet.
 
-Sem Docker, instale o pacote e execute com as duas variáveis de configuração:
+Sem Docker, instale o pacote e execute com as variáveis de configuração e a chave secreta exportada:
 
 ```sh
 MCP_PUBLIC_URL=https://mcp.example.com \
+MCP_STATE_DB=/opt/shopee-affiliate-mcp/data/oauth.sqlite3 \
 SHOPEE_VERIFIED_PROFILE=/opt/shopee-affiliate-mcp/examples/profile.official.json \
 .venv/bin/python run.py --transport oauth-http --port 8765
 ```
@@ -89,13 +96,16 @@ e [OAuth por SSH](https://github.com/nousresearch/hermes-agent/blob/main/website
 
 - A tela de autorização expira em cinco minutos; códigos expiram em um minuto
   e só podem ser usados uma vez, com PKCE S256 e callback registrado.
-- Tokens de acesso duram até uma hora; refresh rotativo não estende a duração
-  absoluta de 24 horas da conexão. Depois disso, conecte novamente.
-- Reiniciar o serviço apaga credenciais, tokens e registros de clientes OAuth.
-  Pode ser necessário excluir e adicionar novamente a conexão no ChatGPT
-  para forçar um novo DCR; no Hermes, refaça o registro/login do MCP.
-- Use somente um processo e uma réplica. Não configure múltiplos workers:
-  esta versão não compartilha memória entre processos.
+- Tokens de acesso duram até uma hora. O refresh é rotativo e cada renovação
+  prolonga a conexão por 90 dias. Após 90 dias sem renovação, conecte novamente.
+- Credenciais, tokens, códigos e registros OAuth são salvos criptografados.
+  Reinícios e deploys preservam as conexões se o volume, a chave e a origem
+  HTTPS forem mantidos. Formulários ainda não concluídos precisam ser reabertos.
+- Revogar uma conexão invalida seus tokens. Quando nenhuma conexão ativa usa
+  aquela conta, suas credenciais são removidas do estado ativo; backups antigos
+  podem conservar cópias criptografadas.
+- Use somente um processo e uma réplica. O banco tem trava de processo;
+  não existe sincronização de estado entre réplicas.
 - Conexões com as mesmas credenciais compartilham o serviço Shopee e seus
   controles de quota/relatórios. Contas diferentes têm serviços separados.
   Instalações externas da mesma conta não participam dessa coordenação.
@@ -104,8 +114,10 @@ e [OAuth por SSH](https://github.com/nousresearch/hermes-agent/blob/main/website
 - Limites por processo: 256 clientes/conexões pendentes/sessões; até dez
   tentativas de conexão por minuto. Comece com poucos usuários e configure
   limites por IP no proxy. Não é um serviço de escala nem gestão de usuários.
-- O runtime não grava credenciais em banco ou arquivos. Proteja a VPS e evite
-  core dumps/snapshots de memória; o sistema operacional pode usar swap.
+- A chave Fernet fica na variável secreta `MCP_CREDENTIALS_KEY`, separada do
+  banco. Proteja ambos e seus backups. O administrador da VPS pode descriptografar
+  os dados se tiver acesso aos dois. Evite logs de corpos/headers sensíveis e
+  dumps de memória; a remoção lógica não garante apagar backups antigos.
 
 Esta versão foi verificada com API simulada e cliente HTTP MCP do SDK.
 A CI validou o build Docker e uma conexão MCP stdio em fixture dentro do

@@ -29,12 +29,15 @@ Stdio é o transporte recomendado. `private-http` é experimental, aceita
 somente loopback e exige um token separado. Não implemente exposição pública
 simplesmente encaminhando essa porta. Para o fluxo remoto, use `oauth-http`
 atrás de HTTPS conforme [REMOTE.md](docs/REMOTE.md): ele implementa OAuth,
-isola conexões e mantém as credenciais somente na memória. Não usa um provedor
+isola conexões e persiste as credenciais criptografadas em SQLite. Não usa um provedor
 externo de identidade e não cria contas de usuários. Ainda é experimental;
-um restart apaga inclusive o registro DCR, podendo exigir recriar a conexão.
+reinícios preservam o registro DCR e as conexões com o volume e a chave corretos.
 
-Os segredos Shopee não são retornados ao cliente MCP. As sessões têm prazo
-absoluto de 24 horas, com refresh rotativo e revogação. A VPS, o proxy, o
+Os segredos Shopee não são retornados ao cliente MCP. As conexões expiram após 90 dias sem refresh, com renovação rotativa e revogação.
+A chave `MCP_CREDENTIALS_KEY` é um segredo de runtime separado do banco;
+um administrador com acesso aos dois pode descriptografar as credenciais.
+Backups antigos podem conter conexões e credenciais já revogadas, portanto
+restaurá-los pode reintroduzir tokens antigos. Proteja e limite esses backups. A VPS, o proxy, o
 sistema operacional e os clientes continuam sendo limites de confiança.
 Não habilite logs de bodies, headers sensíveis, core dumps ou snapshots de
 memória para esse processo.

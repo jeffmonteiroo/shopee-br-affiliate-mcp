@@ -1,4 +1,4 @@
-# Shopee Affiliate MCP — 0.3.0
+# Shopee Affiliate MCP — 0.4.0
 
 Servidor MCP em Python para a Open API de Afiliados Shopee Brasil. Expõe 17 ferramentas por stdio ou Streamable HTTP com OAuth e usa consultas GraphQL assinadas com App ID e Secret da conta configurada.
 
@@ -36,7 +36,9 @@ Esta versão é inicial: as novas ferramentas passaram em testes simulados e ain
 
 ## Conectar pelo ChatGPT ou Hermes
 
-O transporte `oauth-http` oferece uma única tela com App ID e App Secret. Não exige cadastro, senha adicional ou banco de credenciais. Valida o acesso à Shopee antes de autorizar o cliente. As credenciais e sessões ficam somente na memória por até 24 horas; o servidor entrega tokens próprios ao cliente MCP.
+Para subir no Coolify, siga [o guia de configuração](docs/COOLIFY.md).
+
+O transporte `oauth-http` oferece uma única tela com App ID e App Secret. Não exige cadastro ou senha adicional. Valida o acesso à Shopee antes de autorizar o cliente. As credenciais e sessões ficam criptografadas em SQLite num volume persistente e sobrevivem a reinícios; o servidor entrega tokens próprios ao cliente MCP.
 
 Hospede atrás de HTTPS na VPS e configure `MCP_PUBLIC_URL` e `SHOPEE_VERIFIED_PROFILE`. Cada conexão usa sua própria conta. Conexões com as mesmas credenciais compartilham o cliente e os controles locais. Histórico SQLite fica desabilitado neste transporte.
 
@@ -120,7 +122,7 @@ O transporte `private-http` permanece experimental, restrito ao loopback e prote
 PYTHONPATH=src:tests .venv/bin/python -m unittest discover -s tests -v
 ```
 
-CI no GitHub testa Python 3.11 e 3.12. A verificação local passou em 64 testes, incluindo MCP stdio real, assinaturas, precisão, relatórios paginados, batch com resultado incerto, redirecionamentos e isolamento do histórico. O teste HTTP em memória ainda registra avisos de encerramento do SDK; detalhes em [VERIFICATION.md](docs/VERIFICATION.md).
+CI no GitHub testa Python 3.11 e 3.12. A verificação local passou em 72 testes, incluindo MCP stdio real, assinaturas, precisão, relatórios paginados, batch com resultado incerto, redirecionamentos e isolamento do histórico. O teste HTTP em memória ainda registra avisos de encerramento do SDK; detalhes em [VERIFICATION.md](docs/VERIFICATION.md).
 
 Limites atuais: sem estoque/frete/cupons/avaliações textuais, publicação em redes sociais, compras, administração de vendedor ou métricas de todos os cliques. O escopo é a API de afiliados disponível à conta.
 

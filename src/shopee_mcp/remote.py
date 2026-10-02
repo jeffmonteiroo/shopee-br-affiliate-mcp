@@ -1,7 +1,8 @@
-"""Single-worker OAuth gateway. Shopee secrets never leave server memory."""
+"""Single-worker OAuth gateway. Encrypted persistence for Shopee credentials and OAuth tokens."""
 from __future__ import annotations
 
 import asyncio
+import base64
 import hashlib
 import hmac
 import html
@@ -12,7 +13,7 @@ import secrets
 import time
 from collections import deque
 from contextlib import asynccontextmanager
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from urllib.parse import urlsplit
 
@@ -35,13 +36,14 @@ from mcp.server.auth.routes import build_metadata, create_auth_routes, create_pr
 from mcp.server.auth.settings import ClientRegistrationOptions, RevocationOptions
 from mcp.server.streamable_http_manager import StreamableHTTPSessionManager
 from mcp.server.transport_security import TransportSecuritySettings
-from mcp.shared.auth import OAuthToken
+from mcp.shared.auth import OAuthClientInformationFull, OAuthToken
 
 from .core import Credentials, LiveProvider, Profile, SafeError, Service, SignedClient, load_service
 from .server import build_server
+from .storage import EncryptedStore
 
 SCOPE = "shopee"
-SESSION_TTL = 24 * 3600
+SESSION_TTL = 90 * 24 * 3600
 ACCESS_TTL = 3600
 FLOW_TTL = 300
 LIMIT = 256
@@ -80,7 +82,7 @@ def public_origin(value):
     return str(AnyHttpUrl(value)).rstrip("/")
 
 
-def live_factory():
+def live_factory(*, validate=True):
     path = os.getenv("SHOPEE_VERIFIED_PROFILE", "")
     try:
         profile = Profile(json.loads(Path(path).read_text()))
@@ -93,7 +95,8 @@ def live_factory():
         service = Service(LiveProvider(profile, SignedClient(profile, credentials)), account, contract)
         service.history_path = ""  # Remote sessions never persist observations or secrets.
         try:
-            await service.call("search_offers", {"keyword": "teste", "limit": 1})
+            if validate:
+                await service.call("search_offers", {"keyword": "teste", "limit": 1})
         except BaseException:
             await service.provider.client.close()
             raise
@@ -101,16 +104,61 @@ def live_factory():
     return create
 
 
-class MemoryOAuth:
-    # ponytail: one worker and bounded RAM; use shared storage before adding replicas.
-    def __init__(self, origin, factory, *, clock=time.time, redirects=(), allow_loopback=False):
+class OAuthConnections:
+    # ponytail: one worker, one encrypted SQLite snapshot; no extra database service.
+    def __init__(self, origin, factory, *, clock=time.time, redirects=(), allow_loopback=False, store=None, restore_factory=None):
         self.origin, self.resource, self.factory = origin, origin + "/mcp", factory
         self.clock, self.redirects, self.allow_loopback = clock, set(redirects), allow_loopback
         self.clients, self.pending, self.codes, self.access, self.refresh = {}, {}, {}, {}, {}
-        self.grants, self.accounts = {}, {}
+        self.grants, self.accounts, self.credentials = {}, {}, {}
+        self.store, self.restore_factory = store, restore_factory or factory
         self.pepper = secrets.token_bytes(32)
         self.connect_lock = asyncio.Lock()
         self.auth_attempts = deque()
+
+    def save(self):
+        if not self.store:
+            return
+        state = {"version": 1, "origin": self.origin,
+            "pepper": base64.urlsafe_b64encode(self.pepper).decode(),
+            "grants": {k: asdict(v) for k, v in self.grants.items()},
+            "accounts": {k: {"account": self.accounts[k].account, **asdict(v)}
+                for k, v in self.credentials.items()}}
+        for name in ("clients", "codes", "access", "refresh"):
+            state[name] = {k: v.model_dump(mode="json") for k, v in getattr(self, name).items()}
+        self.store.save(state)
+
+    async def restore(self):
+        if not self.store:
+            return
+        try:
+            state = self.store.load()
+            if state is None:
+                return
+            if state["version"] != 1 or state["origin"] != self.origin:
+                raise ValueError
+            self.pepper = base64.urlsafe_b64decode(state["pepper"])
+            if len(self.pepper) != 32:
+                raise ValueError
+            for name, model in (("clients", OAuthClientInformationFull), ("codes", SessionCode),
+                                ("access", SessionAccess), ("refresh", SessionRefresh)):
+                setattr(self, name, {k: model.model_validate(v) for k, v in state[name].items()})
+            self.grants = {k: Grant(**v) for k, v in state["grants"].items()}
+            now = self.clock()
+            referenced = {v.grant for name in ("codes", "access", "refresh")
+                for v in getattr(self, name).values() if v.expires_at > now}
+            active = {g.account for k, g in self.grants.items() if g.expires_at > now and k in referenced}
+            for fingerprint in active:
+                account = state["accounts"][fingerprint]
+                credentials = Credentials(account["app_id"], account["secret"])
+                self.accounts[fingerprint] = await self.restore_factory(credentials, account["account"])
+                self.credentials[fingerprint] = credentials
+            await self.sweep()
+        except BaseException as error:
+            await self.close()
+            if isinstance(error, (KeyError, ValueError, TypeError)):
+                raise SafeError("CONFIGURATION", "Estado OAuth inválido ou origem alterada; preserve o banco.") from None
+            raise
 
     def allowed_redirect(self, value):
         if value in self.redirects:
@@ -126,6 +174,7 @@ class MemoryOAuth:
                 and p.hostname in {"localhost", "127.0.0.1"} and not p.query)
 
     async def sweep(self):
+        before = tuple(len(getattr(self, n)) for n in ("codes", "grants", "access", "refresh", "accounts"))
         now = self.clock()
         self.pending = {k: v for k, v in self.pending.items() if v[2] > now}
         self.codes = {k: v for k, v in self.codes.items() if v.expires_at > now}
@@ -139,8 +188,13 @@ class MemoryOAuth:
         for account in list(self.accounts):
             if account not in active:
                 service = self.accounts.pop(account)
+                self.credentials.pop(account, None)
                 if isinstance(service.provider, LiveProvider):
                     await service.provider.client.close()
+
+        after = tuple(len(getattr(self, n)) for n in ("codes", "grants", "access", "refresh", "accounts"))
+        if before != after:
+            self.save()
 
     async def close(self):
         services = list(self.accounts.values())
@@ -151,9 +205,14 @@ class MemoryOAuth:
         self.refresh.clear()
         self.grants.clear()
         self.accounts.clear()
+        self.credentials.clear()
         for service in services:
             if isinstance(service.provider, LiveProvider):
                 await service.provider.client.close()
+
+        if self.store:
+            self.store.close()
+            self.store = None
 
     async def get_client(self, client_id):
         return self.clients.get(client_id)
@@ -166,6 +225,7 @@ class MemoryOAuth:
         if not client_info.redirect_uris or any(not self.allowed_redirect(str(u)) for u in client_info.redirect_uris):
             raise RegistrationError("invalid_redirect_uri", "Callback não autorizado pelo administrador.")
         self.clients[client_info.client_id] = client_info
+        self.save()
 
     async def authorize(self, client, params):
         await self.sweep()
@@ -207,10 +267,12 @@ class MemoryOAuth:
             if service is None:
                 service = await self.factory(credentials, "conta-" + secrets.token_hex(12))
                 self.accounts[fingerprint] = service
+                self.credentials[fingerprint] = credentials
             # Validity can change during the Shopee request; never issue stale grants.
             if not self.pending_flow(flow):
                 if not any(g.account == fingerprint for g in self.grants.values()):
                     self.accounts.pop(fingerprint, None)
+                    self.credentials.pop(fingerprint, None)
                     if isinstance(service.provider, LiveProvider):
                         await service.provider.client.close()
                 raise SafeError("CONNECT_EXPIRED", "Conexão expirada; conecte novamente.")
@@ -223,6 +285,7 @@ class MemoryOAuth:
                 redirect_uri=params.redirect_uri, redirect_uri_provided_explicitly=params.redirect_uri_provided_explicitly,
                 resource=self.resource)
             self.codes[code.code] = code
+            self.save()
             return construct_redirect_uri(str(params.redirect_uri), code=code.code, state=params.state)
 
     async def load_authorization_code(self, client, authorization_code):
@@ -238,6 +301,7 @@ class MemoryOAuth:
         refresh = SessionRefresh(token=secrets.token_urlsafe(32), client_id=client_id, grant=grant,
             scopes=[SCOPE], expires_at=int(session.expires_at))
         self.access[access.token], self.refresh[refresh.token] = access, refresh
+        self.save()
         return OAuthToken(access_token=access.token, refresh_token=refresh.token,
             token_type="Bearer", expires_in=access.expires_at-int(self.clock()), scope=SCOPE)
 
@@ -253,8 +317,11 @@ class MemoryOAuth:
 
     async def exchange_refresh_token(self, client, refresh_token, scopes):
         token = self.refresh.pop(refresh_token.token, None)
-        if not token or token.client_id != client.client_id or scopes != [SCOPE]:
+        if (not token or token.client_id != client.client_id or scopes != [SCOPE]
+                or token.expires_at <= self.clock() or token.grant not in self.grants
+                or self.grants[token.grant].expires_at <= self.clock()):
             raise TokenError("invalid_grant", "Refresh inválido ou já utilizado.")
+        self.grants[token.grant].expires_at = self.clock() + SESSION_TTL
         for key, value in list(self.access.items()):
             if value.grant == token.grant:
                 self.access.pop(key)
@@ -323,7 +390,7 @@ class RemoteGuard:
         await self.app(scope, replay, secured_send)
 
 
-def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=None, allow_loopback=None):
+def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=None, allow_loopback=None, store=None, restore_factory=None):
     origin = public_origin(public_url)
     if redirects is None:
         try:
@@ -332,7 +399,13 @@ def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=Non
                 raise ValueError
         except ValueError:
             raise SafeError("CONFIGURATION", "MCP_OAUTH_REDIRECT_URIS deve ser uma lista JSON de callbacks.") from None
-    provider = MemoryOAuth(origin, factory or live_factory(), clock=clock, redirects=redirects,
+    if factory is None:
+        factory = live_factory()
+        restore_factory = live_factory(validate=False)
+        store = store or EncryptedStore(os.getenv("MCP_STATE_DB", "/app/data/oauth.sqlite3"),
+            os.getenv("MCP_CREDENTIALS_KEY", ""))
+    provider = OAuthConnections(origin, factory, clock=clock, redirects=redirects,
+        store=store, restore_factory=restore_factory,
         allow_loopback=allow_loopback if allow_loopback is not None else os.getenv("MCP_ALLOW_LOOPBACK_CALLBACKS") == "true")
     registration = ClientRegistrationOptions(enabled=True, valid_scopes=[SCOPE], default_scopes=[SCOPE])
     revocation = RevocationOptions(enabled=True)
@@ -393,11 +466,11 @@ def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=Non
             page = f'''<!doctype html><html lang="pt-BR"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Conectar Shopee</title>
 <style>body{{font:16px system-ui;background:#f5f5f5;color:#222;margin:0;padding:24px}}main{{max-width:440px;margin:8vh auto;padding:28px;background:white;border-radius:16px}}h1{{font-size:26px}}label{{display:block;margin-top:20px}}input,button{{box-sizing:border-box;width:100%;padding:12px;margin-top:8px;border:1px solid #ccc;border-radius:8px;font:inherit}}button{{background:#b9380a;color:white;border:0;margin-top:24px}}small{{display:block;margin-top:20px;line-height:1.5}}code{{overflow-wrap:anywhere}}</style>
 <main><h1>Conectar sua Shopee</h1><p>Informe as credenciais da Open API de Afiliados. Não é a senha da sua conta Shopee.</p>
-<p>Você autoriza <strong>{name}</strong> a pesquisar ofertas, gerar links e consultar seus relatórios por até 24 horas.</p><small>O acesso será entregue a: <code>{destination}</code>. Confira o destino antes de continuar.</small>
+<p>Você autoriza <strong>{name}</strong> a pesquisar ofertas, gerar links e consultar seus relatórios enquanto esta conexão estiver autorizada.</p><small>O acesso será entregue a: <code>{destination}</code>. Confira o destino antes de continuar.</small>
 <form method="post" action="/connect"><input type="hidden" name="flow" value="{html.escape(flow)}"><input type="hidden" name="csrf" value="{csrf}">
 <label for="app_id">App ID</label><input id="app_id" name="app_id" type="password" maxlength="128" autocomplete="off" required>
 <label for="secret">App Secret</label><input id="secret" name="secret" type="password" maxlength="512" autocomplete="off" required>
-<button>Conectar e autorizar</button></form><small>As credenciais ficam apenas na memória deste servidor. Reiniciar o serviço encerra as conexões. Serviço independente, sem vínculo oficial com a Shopee.</small></main></html>'''
+<button>Conectar e autorizar</button></form><small>As credenciais ficam criptografadas neste servidor. A conexão é renovada automaticamente; após 90 dias sem renovação, conecte novamente. Serviço independente, sem vínculo oficial com a Shopee.</small></main></html>'''
             response = HTMLResponse(page)
             response.set_cookie(COOKIE, csrf, max_age=FLOW_TTL, httponly=True,
                 secure=origin.startswith("https:"), samesite="strict", path="/connect")
@@ -424,7 +497,7 @@ def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=Non
     authenticated = RequireAuthMiddleware(manager.handle_request, [SCOPE],
         resource_metadata_url=AnyHttpUrl(origin + "/.well-known/oauth-protected-resource/mcp"))
     async def health(request):
-        return JSONResponse({"status": "ok", "version": "0.3.0"})
+        return JSONResponse({"status": "ok", "version": "0.4.0"})
 
     routes.extend([Route("/health", health, methods=["GET"]),
         Route("/connect", connect, methods=["GET", "POST"]),
@@ -433,6 +506,7 @@ def build_remote_app(public_url, *, factory=None, clock=time.time, redirects=Non
 
     @asynccontextmanager
     async def lifespan(app):
+        await provider.restore()
         async def cleanup():
             while True:
                 await asyncio.sleep(30)

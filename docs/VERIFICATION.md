@@ -1,4 +1,18 @@
-# Verificação — 0.3.0, 2026-10-01
+# Verificação — 0.4.0, 2026-10-01
+
+72 testes locais passaram. A ampliação verifica conexão após reinício, conservação
+da referência da conta, refresh e revogação persistidos, renovação além dos primeiros
+90 dias, expiração por inatividade e reconstrução do cliente Shopee sem consulta de
+validação no startup. O armazenamento foi testado para ausência de segredos em
+texto puro, permissões 0600, chave incorreta sem sobrescrita e trava de processo.
+Nenhuma credencial real foi usada. Ruff passou nos arquivos alterados de Python.
+
+O transporte continua experimental e requer uma réplica/processo. HTTPS no destino,
+Coolify, ChatGPT, Hermes e chamadas reais à Shopee ainda precisam ser validados.
+O SDK MCP 1.21.1 continua emitindo avisos `anyio.ClosedResourceError` no encerramento
+de transportes HTTP stateless; as respostas verificadas passam.
+
+## Verificação anterior — 0.3.0
 
 64 testes locais passaram, sendo 14 novos para o transporte remoto. Cobrem
 OAuth discovery/DCR, formulário e cookie de proteção, PKCE, vínculo de

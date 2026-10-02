@@ -42,4 +42,4 @@ O Dockerfile foi preparado, mas não executado localmente porque o daemon Docker
 
 ## Acesso remoto
 
-Stdio é iniciado pelo cliente e não é um serviço web. O HTTP atual escuta somente em 127.0.0.1, exige `MCP_LOCAL_ACCESS_TOKEN` e não implementa OAuth. Para conectar ChatGPT ou Hermes pela internet, use o novo transporte `oauth-http` conforme [REMOTE.md](REMOTE.md), com HTTPS, formulário de credenciais e sessões em memória.
+Stdio é iniciado pelo cliente e não é um serviço web. O HTTP atual escuta somente em 127.0.0.1, exige `MCP_LOCAL_ACCESS_TOKEN` e não implementa OAuth. Para conectar ChatGPT ou Hermes pela internet, use o novo transporte `oauth-http` conforme [REMOTE.md](REMOTE.md), com HTTPS, formulário de credenciais e sessões criptografadas em volume persistente.
