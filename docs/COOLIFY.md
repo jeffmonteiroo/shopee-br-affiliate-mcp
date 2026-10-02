@@ -29,9 +29,9 @@ o alvo `remote` inicia `oauth-http` em `0.0.0.0:8765`.
    `/app/data`. O processo usa UID/GID `10001`; o diretório precisa ser gravável
    por esse usuário. Um volume Docker novo herda o diretório da imagem. Se usar
    bind mount, ajuste o proprietário do diretório do host para `10001:10001`.
-4. Configure somente uma réplica. Para health check, `/health`, porta `8765`,
-   com header `Host` igual ao domínio público. Se o check do Coolify não permitir
-   esse header, use o comando abaixo dentro do container.
+4. Configure somente uma réplica. Ative o health check do tipo **CMD**, com
+   comando `python -m shopee_mcp.healthcheck`. Ele confere `/health` na porta
+   `8765` com o header `Host` correto.
 5. Clique Deploy. Confirme `https://mcp.seu-dominio.com/health` e a descoberta
    OAuth antes de adicionar a conexão ao cliente.
 
@@ -60,7 +60,7 @@ Sem a chave correta, o servidor recusa iniciar e preserva o banco.
 Comando alternativo de health check, sem expor segredos:
 
 ```sh
-python -c 'import os,urllib.request,urllib.parse; u=os.environ["MCP_PUBLIC_URL"]; r=urllib.request.Request("http://127.0.0.1:8765/health",headers={"Host":urllib.parse.urlsplit(u).netloc}); assert urllib.request.urlopen(r,timeout=5).status==200'
+python -m shopee_mcp.healthcheck
 ```
 
 ## Uso
